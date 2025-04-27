@@ -1,71 +1,99 @@
+const regions = [
+  { file: "data/Brasil_e_Centro-Oeste.csv", id: "viz-centro-oeste" },
+  { file: "data/Brasil_e_GR.csv", id: "viz-gr" },
+  { file: "data/Brasil_e_Nordeste_1.csv", id: "viz-nordeste-1" },
+  { file: "data/Brasil_e_Nordeste_2.csv", id: "viz-nordeste-2" },
+  { file: "data/Brasil_e_Norte.csv", id: "viz-norte" },
+  { file: "data/Brasil_e_Sudeste.csv", id: "viz-sudeste" },
+  { file: "data/Brasil_e_Sul.csv", id: "viz-sul" }
+];
 
-function createInteractiveChart(csvFilePath, divId) {
-    d3.csv(csvFilePath).then(function(data) {
-        const margin = {top: 20, right: 30, bottom: 40, left: 90},
-              width = 800 - margin.left - margin.right,
-              height = 400 - margin.top - margin.bottom;
+const yearRange = document.getElementById("yearRange");
+const yearValue = document.getElementById("yearValue");
+const sexoFilter = document.getElementById("sexoFilter");
 
-        const svg = d3.select("#" + divId)
-          .append("svg")
-          .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom)
-          .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+regions.forEach(region => {
+  createChart(region.file, region.id);
+});
 
-        // X scale
-        const x = d3.scaleLinear()
-          .domain([0, d3.max(data, d => +d["2018"] || 0)])
-          .range([0, width]);
+function createChart(csvPath, divId) {
+  d3.csv(csvPath).then(data => {
+    const container = d3.select("#" + divId);
+    const margin = { top: 20, right: 30, bottom: 40, left: 120 },
+          width = 800 - margin.left - margin.right,
+          height = 500 - margin.top - margin.bottom;
 
-        // Y scale
-        const y = d3.scaleBand()
-          .domain(data.map(d => d["Categoria .1"]))
-          .range([0, height])
-          .padding(0.1);
+    const svg = container.append("svg")
+      .attr("width", "100%")
+      .attr("viewBox", `0 0 800 500`)
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        svg.append("g")
-          .call(d3.axisLeft(y));
+    const x = d3.scaleLinear().range([0, width]);
+    const y = d3.scaleBand().range([0, height]).padding(0.2);
 
-        svg.selectAll(".bar")
-          .data(data)
-          .enter()
-          .append("rect")
-          .attr("class", "bar")
+    const tooltip = container.append("div")
+      .attr("class", "tooltip");
+
+    function updateChart() {
+      const selectedYear = yearRange.value;
+      const selectedSexo = sexoFilter.value;
+
+      yearValue.textContent = selectedYear;
+
+      const filteredData = data.filter(d => d["Categoria"] === selectedSexo && d["Categoria .1"] !== "");
+
+      x.domain([0, d3.max(filteredData, d => +d[selectedYear])]);
+      y.domain(filteredData.map(d => d["Categoria .1"]));
+
+      const bars = svg.selectAll("rect")
+        .data(filteredData, d => d["Categoria .1"]);
+
+      bars.join(
+        enter => enter.append("rect")
+          .attr("x", 0)
           .attr("y", d => y(d["Categoria .1"]))
-          .attr("width", d => x(+d["2018"] || 0))
           .attr("height", y.bandwidth())
-          .attr("fill", "#00bfff");
-
-        // Tooltip
-        const tooltip = d3.select("body").append("div")
-          .style("position", "absolute")
-          .style("background", "#222")
-          .style("color", "#fff")
-          .style("padding", "5px 10px")
-          .style("border-radius", "5px")
-          .style("opacity", 0);
-
-        svg.selectAll("rect")
-          .on("mouseover", function(event, d) {
-            tooltip.transition().duration(200).style("opacity", .9);
-            tooltip.html(d["Categoria .1"] + "<br/>" + d["2018"])
-              .style("left", (event.pageX + 5) + "px")
-              .style("top", (event.pageY - 28) + "px");
+          .attr("width", 0)
+          .attr("fill", "#00bfff")
+          .on("mouseover", (event, d) => {
+            tooltip.style("opacity", 1)
+              .html(`<strong>Sexo:</strong> ${d["Categoria"]}<br>
+                     <strong>Idade:</strong> ${d["Categoria .1"]}<br>
+                     <strong>População:</strong> ${(+d[selectedYear]).toLocaleString('pt-BR')} pessoas`)
+              .style("left", (event.pageX + 10) + "px")
+              .style("top", (event.pageY - 20) + "px");
           })
-          .on("mouseout", function(d) {
-            tooltip.transition().duration(500).style("opacity", 0);
-          });
+          .on("mouseout", () => tooltip.style("opacity", 0))
+          .transition()
+          .duration(800)
+          .attr("width", d => x(+d[selectedYear])),
+          
+        update => update.transition()
+          .duration(800)
+          .attr("y", d => y(d["Categoria .1"]))
+          .attr("height", y.bandwidth())
+          .attr("width", d => x(+d[selectedYear]))
+      );
 
-    }).catch(function(error){
-        console.log("Erro ao carregar ou processar CSV: " + csvFilePath, error);
-    });
+      svg.selectAll(".axis").remove();
+
+      svg.append("g")
+        .attr("class", "axis")
+        .call(d3.axisLeft(y));
+
+      svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".2s")));
+    }
+
+    updateChart();
+
+    yearRange.addEventListener("input", updateChart);
+    sexoFilter.addEventListener("change", updateChart);
+
+  }).catch(error => {
+    console.log("Erro ao carregar o CSV:", error);
+  });
 }
-
-// Chamadas para cada gráfico
-createInteractiveChart("data/Brasil_e_Centro-Oeste.csv", "viz-centro-oeste");
-createInteractiveChart("data/Brasil_e_GR.csv", "viz-gr");
-createInteractiveChart("data/Brasil_e_Nordeste_1.csv", "viz-nordeste-1");
-createInteractiveChart("data/Brasil_e_Nordeste_2.csv", "viz-nordeste-2");
-createInteractiveChart("data/Brasil_e_Norte.csv", "viz-norte");
-createInteractiveChart("data/Brasil_e_Sudeste.csv", "viz-sudeste");
-createInteractiveChart("data/Brasil_e_Sul.csv", "viz-sul");
