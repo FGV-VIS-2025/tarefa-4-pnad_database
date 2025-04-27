@@ -1,8 +1,3 @@
-// Configurações dos gráficos
-const margin = {top: 30, right: 30, bottom: 70, left: 60};
-const chartWidth = 450 - margin.left - margin.right;
-const chartHeight = 350 - margin.top - margin.bottom;
-
 // Variáveis globais
 let rawData = [];
 let filteredData = [];
@@ -18,8 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Event listener para aplicar filtros
-    document.getElementById('apply-filters').addEventListener('click', applyFilters);
+    // Event listeners para os botões
+    document.getElementById('next-phase1').addEventListener('click', setupPhase2Filters);
+    document.getElementById('generate-analysis').addEventListener('click', generateFilteredTable);
 });
 
 // Carregar dados da região selecionada
@@ -30,8 +26,8 @@ async function loadRegionData(region) {
         const csvData = await response.text();
         rawData = d3.csvParse(csvData);
         
-        // Exibir painel de filtros
-        setupFilterControls(rawData);
+        // Inicializar primeira fase de filtros
+        setupPhase1Filters();
         document.getElementById('filter-panel').classList.remove('hidden');
         document.getElementById('results').classList.add('hidden');
     } catch (error) {
@@ -40,163 +36,84 @@ async function loadRegionData(region) {
     }
 }
 
-// Configurar controles de filtro dinâmicos
-function setupFilterControls(data) {
-    const filterContainer = document.getElementById('dynamic-filters');
-    filterContainer.innerHTML = '';
-
-    // Colunas para filtrar (ajuste conforme seu CSV)
-    const filterColumns = [
-        'Indicador', 'Nível Territorial', 'Variável de abertura', 
-        'Categoria', 'Variável de abertura .1', 'Categoria .1'
-    ];
-
-    filterColumns.forEach(col => {
-        if (data[0][col] !== undefined) {
-            const uniqueValues = [...new Set(data.map(d => d[col]))].filter(Boolean);
-            
-            if (uniqueValues.length > 0) {
-                const filterItem = document.createElement('div');
-                filterItem.className = 'filter-item';
-                filterItem.innerHTML = `
-                    <label for="filter-${col}">${col}:</label>
-                    <select id="filter-${col}" class="form-control" multiple>
-                        ${uniqueValues.map(val => `<option value="${val}">${val}</option>`).join('')}
-                    </select>
-                `;
-                filterContainer.appendChild(filterItem);
-            }
-        }
-    });
+// Configurar primeira fase de filtros
+function setupPhase1Filters() {
+    // Resetar fases
+    document.getElementById('phase1').classList.remove('hidden');
+    document.getElementById('phase2').classList.add('hidden');
+    
+    // Popular filtro de Indicador
+    const indicadorFilter = document.getElementById('indicador-filter');
+    const indicadores = [...new Set(rawData.map(d => d.Indicador))].filter(Boolean);
+    
+    indicadorFilter.innerHTML = '<option value="">-- Todos --</option>' +
+        indicadores.map(ind => `<option value="${ind}">${ind}</option>`).join('');
+    
+    // Popular filtro de Variável de Abertura
+    const varAberturaFilter = document.getElementById('var-abertura-filter');
+    const varAberturas = [...new Set(rawData.map(d => d['Variável de abertura']))].filter(Boolean);
+    
+    varAberturaFilter.innerHTML = '<option value="">-- Todos --</option>' +
+        varAberturas.map(varAb => `<option value="${varAb}">${varAb}</option>`).join('');
 }
 
-// Aplicar filtros selecionados
-function applyFilters() {
-    const region = document.getElementById('region-select').value;
-    if (!region) return;
-
-    // Iniciar com todos os dados
+// Configurar segunda fase de filtros
+function setupPhase2Filters() {
+    // Obter filtros da fase 1
+    const indicador = document.getElementById('indicador-filter').value;
+    const varAbertura = document.getElementById('var-abertura-filter').value;
+    
+    // Filtrar dados baseados na fase 1
     filteredData = [...rawData];
-
-    // Aplicar cada filtro
-    const filterElements = document.querySelectorAll('#dynamic-filters select');
-    filterElements.forEach(select => {
-        const column = select.id.replace('filter-', '');
-        const selectedOptions = Array.from(select.selectedOptions).map(opt => opt.value);
-        
-        if (selectedOptions.length > 0) {
-            filteredData = filteredData.filter(d => selectedOptions.includes(d[column]));
-        }
-    });
-
-    // Exibir resultados
-    displayResults();
-    document.getElementById('results').classList.remove('hidden');
-}
-
-// Exibir resultados da análise
-function displayResults() {
-    if (filteredData.length === 0) {
-        alert('Nenhum dado encontrado com os filtros selecionados.');
-        return;
+    
+    if (indicador) {
+        filteredData = filteredData.filter(d => d.Indicador === indicador);
     }
+    
+    if (varAbertura) {
+        filteredData = filteredData.filter(d => d['Variável de abertura'] === varAbertura);
+    }
+    
+    // Filtrar sempre por Unidade da Federação
+    filteredData = filteredData.filter(d => d['Nível Territorial'] === 'Unidade da Federação');
+    
+    // Mostrar fase 2
+    document.getElementById('phase1').classList.add('hidden');
+    document.getElementById('phase2').classList.remove('hidden');
+    
+    // Popular filtro de Variável de Abertura .1
+    const varAbertura1Filter = document.getElementById('var-abertura1-filter');
+    const varAberturas1 = [...new Set(filteredData.map(d => d['Variável de abertura .1']))].filter(Boolean);
+    
+    varAbertura1Filter.innerHTML = '<option value="">-- Todos --</option>' +
+        varAberturas1.map(varAb => `<option value="${varAb}">${varAb}</option>`).join('');
+    
+    // Popular filtro de Categoria .1
+    const categoria1Filter = document.getElementById('categoria1-filter');
+    const categorias1 = [...new Set(filteredData.map(d => d['Categoria .1']))].filter(Boolean);
+    
+    categoria1Filter.innerHTML = '<option value="">-- Todos --</option>' +
+        categorias1.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+}
 
-    renderPieChart();
-    renderBarChart();
+// Gerar tabela com dados filtrados
+function generateFilteredTable() {
+    // Obter filtros da fase 2
+    const varAbertura1 = document.getElementById('var-abertura1-filter').value;
+    const categoria1 = document.getElementById('categoria1-filter').value;
+    
+    // Aplicar filtros adicionais
+    if (varAbertura1) {
+        filteredData = filteredData.filter(d => d['Variável de abertura .1'] === varAbertura1);
+    }
+    
+    if (categoria1) {
+        filteredData = filteredData.filter(d => d['Categoria .1'] === categoria1);
+    }
+    
+    // Exibir resultados
     renderDataTable();
-}
-
-// Renderizar gráfico de pizza para Categoria
-function renderPieChart() {
-    const container = d3.select('#pie-chart').html('');
-    const svg = container.append('svg')
-        .attr('width', chartWidth + margin.left + margin.right)
-        .attr('height', chartHeight + margin.top + margin.bottom)
-        .append('g')
-        .attr('transform', `translate(${chartWidth/2 + margin.left}, ${chartHeight/2 + margin.top})`);
-
-    // Agrupar por Categoria
-    const categoryData = d3.rollup(
-        filteredData,
-        v => v.length,
-        d => d['Categoria']
-    );
-
-    const pie = d3.pie().value(d => d[1]);
-    const arc = d3.arc()
-        .innerRadius(0)
-        .outerRadius(Math.min(chartWidth, chartHeight) / 2 - 10);
-
-    const arcs = svg.selectAll('.arc')
-        .data(pie([...categoryData.entries()]))
-        .enter().append('g')
-        .attr('class', 'arc');
-
-    arcs.append('path')
-        .attr('d', arc)
-        .attr('fill', (d, i) => colorScheme(i))
-        .attr('stroke', 'white')
-        .attr('stroke-width', 1);
-
-    // Adicionar labels
-    arcs.append('text')
-        .attr('transform', d => `translate(${arc.centroid(d)})`)
-        .attr('text-anchor', 'middle')
-        .attr('dy', '0.35em')
-        .text(d => d.data[0])
-        .style('font-size', '10px')
-        .style('fill', 'white');
-}
-
-// Renderizar gráfico de barras para Nível Territorial
-function renderBarChart() {
-    const container = d3.select('#bar-chart').html('');
-    const svg = container.append('svg')
-        .attr('width', chartWidth + margin.left + margin.right)
-        .attr('height', chartHeight + margin.top + margin.bottom)
-        .append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`);
-
-    // Agrupar por Nível Territorial
-    const territorialData = d3.rollup(
-        filteredData,
-        v => v.length,
-        d => d['Nível Territorial']
-    );
-
-    // Escalas
-    const x = d3.scaleBand()
-        .domain([...territorialData.keys()])
-        .range([0, chartWidth])
-        .padding(0.2);
-
-    const y = d3.scaleLinear()
-        .domain([0, d3.max([...territorialData.values()])])
-        .range([chartHeight, 0]);
-
-    // Barras
-    svg.selectAll('.bar')
-        .data([...territorialData.entries()])
-        .enter().append('rect')
-        .attr('class', 'bar')
-        .attr('x', d => x(d[0]))
-        .attr('y', d => y(d[1]))
-        .attr('width', x.bandwidth())
-        .attr('height', d => chartHeight - y(d[1]))
-        .attr('fill', (d, i) => colorScheme(i));
-
-    // Eixos
-    svg.append('g')
-        .attr('transform', `translate(0, ${chartHeight})`)
-        .call(d3.axisBottom(x))
-        .selectAll('text')
-        .attr('transform', 'rotate(-45)')
-        .attr('text-anchor', 'end')
-        .attr('dx', '-0.5em')
-        .attr('dy', '0.5em');
-
-    svg.append('g')
-        .call(d3.axisLeft(y));
+    document.getElementById('results').classList.remove('hidden');
 }
 
 // Renderizar tabela com dados filtrados
@@ -204,31 +121,37 @@ function renderDataTable() {
     const container = document.getElementById('table-container');
     container.innerHTML = '';
 
-    if (filteredData.length === 0) return;
-
-    // Limitar a 50 linhas para performance
-    const displayData = filteredData.length > 50 ? filteredData.slice(0, 50) : filteredData;
+    if (filteredData.length === 0) {
+        container.innerHTML = '<p class="no-data">Nenhum dado encontrado com os filtros selecionados.</p>';
+        return;
+    }
 
     const table = document.createElement('table');
     const thead = document.createElement('thead');
     const tbody = document.createElement('tbody');
 
-    // Cabeçalho
+    // Cabeçalho (mostrar apenas colunas relevantes)
+    const relevantColumns = [
+        'Indicador', 'Nível Territorial', 'Variável de abertura', 
+        'Categoria', 'Variável de abertura .1', 'Categoria .1',
+        '2016', '2017', '2018'  // Adicionando anos como exemplo
+    ];
+
     const headerRow = document.createElement('tr');
-    Object.keys(displayData[0]).forEach(key => {
+    relevantColumns.forEach(col => {
         const th = document.createElement('th');
-        th.textContent = key;
+        th.textContent = col;
         headerRow.appendChild(th);
     });
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
     // Dados
-    displayData.forEach(row => {
+    filteredData.forEach(row => {
         const tr = document.createElement('tr');
-        Object.values(row).forEach(val => {
+        relevantColumns.forEach(col => {
             const td = document.createElement('td');
-            td.textContent = val;
+            td.textContent = row[col] || '-';
             tr.appendChild(td);
         });
         tbody.appendChild(tr);
@@ -236,11 +159,9 @@ function renderDataTable() {
     table.appendChild(tbody);
     container.appendChild(table);
 
-    if (filteredData.length > 50) {
-        const warning = document.createElement('p');
-        warning.textContent = `Mostrando 50 de ${filteredData.length} registros. Aplique filtros mais específicos para ver todos os dados.`;
-        warning.style.color = '#e74c3c';
-        warning.style.marginTop = '10px';
-        container.appendChild(warning);
-    }
+    // Adicionar contagem de resultados
+    const countInfo = document.createElement('p');
+    countInfo.className = 'result-count';
+    countInfo.textContent = `${filteredData.length} registros encontrados`;
+    container.insertBefore(countInfo, container.firstChild);
 }

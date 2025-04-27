@@ -27,25 +27,47 @@
         </div>
 
         <div id="filter-panel" class="filter-panel hidden">
-            <h2>Filtros Avançados</h2>
-            <div id="dynamic-filters" class="filters-grid"></div>
-            <button id="apply-filters" class="btn">Gerar Análise</button>
+            <h2>Filtros Hierárquicos</h2>
+            
+            <!-- Fase 1 de filtros -->
+            <div class="filter-phase" id="phase1">
+                <div class="form-group">
+                    <label for="indicador-filter">Indicador:</label>
+                    <select id="indicador-filter" class="form-control"></select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="var-abertura-filter">Variável de Abertura:</label>
+                    <select id="var-abertura-filter" class="form-control"></select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Nível Territorial:</label>
+                    <input type="text" id="nivel-territorial" class="form-control" value="Unidade da Federação" readonly>
+                </div>
+                
+                <button id="next-phase1" class="btn">Próxima Fase</button>
+            </div>
+            
+            <!-- Fase 2 de filtros -->
+            <div class="filter-phase hidden" id="phase2">
+                <div class="form-group">
+                    <label for="var-abertura1-filter">Variável de Abertura .1:</label>
+                    <select id="var-abertura1-filter" class="form-control"></select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="categoria1-filter">Categoria .1:</label>
+                    <select id="categoria1-filter" class="form-control"></select>
+                </div>
+                
+                <button id="generate-analysis" class="btn">Gerar Tabela</button>
+            </div>
         </div>
 
         <div id="results" class="results hidden">
-            <h2>Resultados da Análise</h2>
-            <div class="charts-container">
-                <div class="chart-container">
-                    <h3>Distribuição por Categoria</h3>
-                    <div id="pie-chart"></div>
-                </div>
-                <div class="chart-container">
-                    <h3>Comparação por Nível Territorial</h3>
-                    <div id="bar-chart"></div>
-                </div>
-            </div>
+            <h2>Resultados Filtrados</h2>
             <div class="data-table">
-                <h3>Dados Filtrados</h3>
                 <div id="table-container"></div>
             </div>
         </div>
