@@ -1,7 +1,16 @@
 // Configurações do gráfico
-const margin = {top: 50, right: 30, bottom: 70, left: 60};
-const width = 800 - margin.left - margin.right;
-const height = 500 - margin.top - margin.bottom;
+const margin = {top: 50, right: 30, bottom: 100, left: 60};
+const width = 1000 - margin.left - margin.right;
+const height = 600 - margin.top - margin.bottom;
+
+// Cores para cada região
+const regionColors = {
+    "Sul": "#3498db",
+    "Sudeste": "#e74c3c",
+    "Centro-Oeste": "#2ecc71",
+    "Nordeste": "#f39c12",
+    "Norte": "#9b59b6"
+};
 
 // Criação do SVG
 const svg = d3.select("#chart")
@@ -19,6 +28,10 @@ const x = d3.scaleBand()
 const y = d3.scaleLinear()
     .range([height, 0]);
 
+const color = d3.scaleOrdinal()
+    .domain(Object.keys(regionColors))
+    .range(Object.values(regionColors));
+
 // Eixos
 const xAxis = svg.append("g")
     .attr("class", "axis axis-x")
@@ -31,7 +44,7 @@ const yAxis = svg.append("g")
 svg.append("text")
     .attr("class", "axis-label")
     .attr("x", width / 2)
-    .attr("y", height + margin.bottom - 10)
+    .attr("y", height + margin.bottom - 20)
     .text("Grupos de Idade");
 
 svg.append("text")
@@ -44,79 +57,174 @@ svg.append("text")
 // Tooltip
 const tooltip = d3.select("#tooltip");
 
-// Dados (simplificados - você deve carregar seu CSV real aqui)
-const data = [
-    {ageGroup: "0 a 3 anos", Total2016: 10223.232, Total2017: 10141.908, Total2018: 10171.73},
-    {ageGroup: "4 a 5 anos", Total2016: 5262.563, Total2017: 5268.945, Total2018: 5350.824},
-    {ageGroup: "6 a 9 anos", Total2016: 11100.37, Total2017: 10962.806, Total2018: 10947.352},
-    {ageGroup: "10 a 14 anos", Total2016: 15485.672, Total2017: 15363.81, Total2018: 15023.146},
-    {ageGroup: "15 a 17 anos", Total2016: 18617.588, Total2017: 10426.676, Total2018: 9752.471},
-    {ageGroup: "18 a 24 anos", Total2016: 22284.286, Total2017: 22727.774, Total2018: 22708.814},
-    {ageGroup: "25 a 29 anos", Total2016: 13596.59, Total2017: 15138.452, Total2018: 14590.647},
-    {ageGroup: "30 a 39 anos", Total2016: 32134.993, Total2017: 32467.297, Total2018: 32597.356},
-    {ageGroup: "40 a 59 anos", Total2016: 52447.78, Total2017: 53172.422, Total2018: 54106.608},
-    {ageGroup: "60 anos ou mais", Total2016: 29582.959, Total2017: 30334.56, Total2018: 32114.474}
-];
+// Legenda
+const legend = d3.select(".container")
+    .append("div")
+    .attr("class", "region-legend");
 
-// Função para atualizar o gráfico
-function updateChart(year, category = "Total") {
-    const yearKey = `${category}${year}`;
+// Carregar todos os dados
+async function loadAllData() {
+    const regions = ["Sul", "Sudeste", "Centro-Oeste", "Nordeste", "Norte"];
+    const allData = {};
     
-    // Atualizar escalas
-    x.domain(data.map(d => d.ageGroup));
-    y.domain([0, d3.max(data, d => d[yearKey])]);
+    for (const region of regions) {
+        const filename = `data/Brasil_e_${region.replace("-", "_")}.csv`;
+        try {
+            const data = await d3.csv(filename);
+            allData[region] = processRegionData(data);
+        } catch (error) {
+            console.error(`Erro ao carregar dados da região ${region}:`, error);
+        }
+    }
+    
+    return allData;
+}
+
+// Processar dados de uma região
+function processRegionData(data) {
+    return data.map(d => ({
+        ageGroup: d["Categoria .1"].trim(),
+        Total2016: +d["2016"],
+        Total2017: +d["2017"],
+        Total2018: +d["2018"],
+        Homem2016: d["Sexo"] === "Homem" ? +d["2016"] : 0,
+        Homem2017: d["Sexo"] === "Homem" ? +d["2017"] : 0,
+        Homem2018: d["Sexo"] === "Homem" ? +d["2018"] : 0
+    }));
+}
+
+// Atualizar gráfico
+function updateChart(data, year, category = "Total", region = "all") {
+    // Limpar gráfico
+    svg.selectAll(".bar").remove();
+    
+    // Criar legenda
+    updateLegend(region);
+    
+    // Preparar dados
+    let chartData = [];
+    if (region === "all") {
+        for (const [reg, regData] of Object.entries(data)) {
+            regData.forEach(d => {
+                chartData.push({
+                    ageGroup: d.ageGroup,
+                    value: d[`${category}${year}`],
+                    region: reg
+                });
+            });
+        }
+    } else {
+        chartData = data[region].map(d => ({
+            ageGroup: d.ageGroup,
+            value: d[`${category}${year}`],
+            region: region
+        }));
+    }
+    
+    // Agrupar por faixa etária se mostrando todas as regiões
+    if (region === "all") {
+        const ageGroups = [...new Set(chartData.map(d => d.ageGroup))];
+        const nestedData = ageGroups.map(age => ({
+            ageGroup: age,
+            regions: chartData.filter(d => d.ageGroup === age)
+        }));
+        
+        // Atualizar escalas para agrupamento
+        x.domain(ageGroups);
+        y.domain([0, d3.max(chartData, d => d.value)]);
+        
+        // Desenhar barras agrupadas
+        const barGroups = svg.selectAll(".bar-group")
+            .data(nestedData)
+            .enter()
+            .append("g")
+            .attr("class", "bar-group")
+            .attr("transform", d => `translate(${x(d.ageGroup)},0)`);
+        
+        barGroups.selectAll(".bar")
+            .data(d => d.regions)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", (d, i) => i * (x.bandwidth() / d.regions.length))
+            .attr("width", x.bandwidth() / d.regions.length - 2)
+            .attr("y", d => y(d.value))
+            .attr("height", d => height - y(d.value))
+            .attr("fill", d => regionColors[d.region])
+            .on("mouseover", showTooltip)
+            .on("mouseout", hideTooltip);
+    } else {
+        // Atualizar escalas para uma única região
+        x.domain(chartData.map(d => d.ageGroup));
+        y.domain([0, d3.max(chartData, d => d.value)]);
+        
+        // Desenhar barras simples
+        svg.selectAll(".bar")
+            .data(chartData)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.ageGroup))
+            .attr("width", x.bandwidth())
+            .attr("y", d => y(d.value))
+            .attr("height", d => height - y(d.value))
+            .attr("fill", regionColors[region])
+            .on("mouseover", showTooltip)
+            .on("mouseout", hideTooltip);
+    }
     
     // Atualizar eixos
     xAxis.transition().duration(500).call(d3.axisBottom(x));
     yAxis.transition().duration(500).call(d3.axisLeft(y));
+}
+
+// Atualizar legenda
+function updateLegend(selectedRegion) {
+    legend.selectAll("*").remove();
     
-    // Atualizar barras
-    const bars = svg.selectAll(".bar")
-        .data(data, d => d.ageGroup);
+    const items = selectedRegion === "all" 
+        ? Object.keys(regionColors) 
+        : [selectedRegion];
     
-    // Remover barras antigas
-    bars.exit().remove();
-    
-    // Adicionar novas barras
-    bars.enter()
-        .append("rect")
-        .attr("class", "bar")
-        .attr("x", d => x(d.ageGroup))
-        .attr("width", x.bandwidth())
-        .attr("y", height)
-        .attr("height", 0)
-        .merge(bars)
-        .transition()
+    items.forEach(region => {
+        legend.append("div")
+            .attr("class", "legend-item")
+            .html(`
+                <div class="legend-color" style="background-color:${regionColors[region]}"></div>
+                <span>${region}</span>
+            `);
+    });
+}
+
+// Tooltip functions
+function showTooltip(event, d) {
+    tooltip.transition()
+        .duration(200)
+        .style("opacity", .9);
+    tooltip.html(`
+        <strong>${d.region} - ${d.ageGroup}</strong><br/>
+        População: ${d.value.toLocaleString('pt-BR')}<br/>
+        Ano: ${document.getElementById("year-select").value}
+    `)
+    .style("left", (event.pageX + 5) + "px")
+    .style("top", (event.pageY - 28) + "px");
+}
+
+function hideTooltip() {
+    tooltip.transition()
         .duration(500)
-        .attr("x", d => x(d.ageGroup))
-        .attr("width", x.bandwidth())
-        .attr("y", d => y(d[yearKey]))
-        .attr("height", d => height - y(d[yearKey]));
-    
-    // Tooltip interativo
-    svg.selectAll(".bar")
-        .on("mouseover", function(event, d) {
-            tooltip.transition()
-                .duration(200)
-                .style("opacity", .9);
-            tooltip.html(`<strong>${d.ageGroup}</strong><br/>${d[yearKey].toLocaleString()} pessoas`)
-                .style("left", (event.pageX + 5) + "px")
-                .style("top", (event.pageY - 28) + "px");
-        })
-        .on("mouseout", function() {
-            tooltip.transition()
-                .duration(500)
-                .style("opacity", 0);
-        });
+        .style("opacity", 0);
 }
 
 // Controles interativos
-let currentYear = 2016;
+let currentYear = "2016";
 let animationInterval;
 
-document.getElementById("category-select").addEventListener("change", function() {
-    const category = this.value;
-    updateChart(currentYear, category);
+document.getElementById("region-select").addEventListener("change", updateAll);
+document.getElementById("category-select").addEventListener("change", updateAll);
+document.getElementById("year-select").addEventListener("change", function() {
+    currentYear = this.value;
+    updateAll();
 });
 
 document.getElementById("play-button").addEventListener("click", function() {
@@ -127,12 +235,27 @@ document.getElementById("play-button").addEventListener("click", function() {
     } else {
         this.textContent = "Parar Animação";
         animationInterval = setInterval(() => {
-            currentYear = currentYear < 2018 ? currentYear + 1 : 2016;
-            const category = document.getElementById("category-select").value;
-            updateChart(currentYear, category);
-        }, 1000);
+            const years = ["2016", "2017", "2018"];
+            const currentIndex = years.indexOf(currentYear);
+            currentYear = years[(currentIndex + 1) % years.length];
+            document.getElementById("year-select").value = currentYear;
+            updateAll();
+        }, 1500);
     }
 });
 
-// Inicializar gráfico
-updateChart(2016);
+// Função para atualizar tudo
+function updateAll() {
+    const region = document.getElementById("region-select").value;
+    const category = document.getElementById("category-select").value;
+    const year = document.getElementById("year-select").value;
+    
+    loadAllData().then(allData => {
+        updateChart(allData, year, category, region);
+    });
+}
+
+// Inicializar
+loadAllData().then(allData => {
+    updateChart(allData, "2016", "Total", "all");
+});
