@@ -1,11 +1,12 @@
+
 const regions = [
-  { file: "data/Brasil_e_Centro-Oeste.csv", id: "viz-centro-oeste" },
-  { file: "data/Brasil_e_GR.csv", id: "viz-gr" },
-  { file: "data/Brasil_e_Nordeste_1.csv", id: "viz-nordeste-1" },
-  { file: "data/Brasil_e_Nordeste_2.csv", id: "viz-nordeste-2" },
-  { file: "data/Brasil_e_Norte.csv", id: "viz-norte" },
-  { file: "data/Brasil_e_Sudeste.csv", id: "viz-sudeste" },
-  { file: "data/Brasil_e_Sul.csv", id: "viz-sul" }
+  { file: "./data/Brasil_e_Centro-Oeste.csv", id: "viz-centro-oeste" },
+  { file: "./data/Brasil_e_GR.csv", id: "viz-gr" },
+  { file: "./data/Brasil_e_Nordeste_1.csv", id: "viz-nordeste-1" },
+  { file: "./data/Brasil_e_Nordeste_2.csv", id: "viz-nordeste-2" },
+  { file: "./data/Brasil_e_Norte.csv", id: "viz-norte" },
+  { file: "./data/Brasil_e_Sudeste.csv", id: "viz-sudeste" },
+  { file: "./data/Brasil_e_Sul.csv", id: "viz-sul" }
 ];
 
 const yearRange = document.getElementById("yearRange");
@@ -17,7 +18,12 @@ regions.forEach(region => {
 });
 
 function createChart(csvPath, divId) {
-  d3.csv(csvPath).then(data => {
+  const loadingMessage = document.getElementById("loadingMessage");
+  loadingMessage.style.display = "block";  // Exibe a mensagem de carregamento
+
+  d3.csv(csvPath, d3.autoType, { delimiter: ";" }).then(data => {
+    loadingMessage.style.display = "none";  // Oculta a mensagem quando os dados são carregados
+
     const container = d3.select("#" + divId);
     const margin = { top: 20, right: 30, bottom: 40, left: 120 },
           width = 800 - margin.left - margin.right,
@@ -25,7 +31,7 @@ function createChart(csvPath, divId) {
 
     const svg = container.append("svg")
       .attr("width", "100%")
-      .attr("viewBox", `0 0 800 500`)
+      .attr("viewBox", "0 0 800 500")
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -68,7 +74,7 @@ function createChart(csvPath, divId) {
           .transition()
           .duration(800)
           .attr("width", d => x(+d[selectedYear])),
-          
+
         update => update.transition()
           .duration(800)
           .attr("y", d => y(d["Categoria .1"]))
@@ -95,5 +101,6 @@ function createChart(csvPath, divId) {
 
   }).catch(error => {
     console.log("Erro ao carregar o CSV:", error);
+    loadingMessage.style.display = "none";  // Oculta a mensagem em caso de erro
   });
 }
