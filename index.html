@@ -1,76 +1,25 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard População PNAD</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://d3js.org/d3.v7.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demografia do Sul do Brasil</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-
-<header>
-  <h1>Visualização Interativa - PNAD</h1>
-  <div class="controls">
-    <label for="yearRange">Ano:</label>
-    <input type="range" id="yearRange" min="2016" max="2018" value="2018" step="1">
-    <span id="yearValue">2018</span>
-
-    <label for="sexoFilter">Sexo:</label>
-    <select id="sexoFilter">
-      <option value="Total">Total</option>
-      <option value="Homem">Homem</option>
-      <option value="Mulher">Mulher</option>
-    </select>
-  </div>
-  <nav>
-    <a href="#centro-oeste">Centro-Oeste</a>
-    <a href="#gr">Grande Região</a>
-    <a href="#nordeste-1">Nordeste 1</a>
-    <a href="#nordeste-2">Nordeste 2</a>
-    <a href="#norte">Norte</a>
-    <a href="#sudeste">Sudeste</a>
-    <a href="#sul">Sul</a>
-  </nav>
-</header>
-
-<main>
-  <section id="centro-oeste">
-    <h2>Centro-Oeste</h2>
-    <div id="viz-centro-oeste" class="chart"></div>
-  </section>
-
-  <section id="gr">
-    <h2>Grande Região</h2>
-    <div id="viz-gr" class="chart"></div>
-  </section>
-
-  <section id="nordeste-1">
-    <h2>Nordeste 1</h2>
-    <div id="viz-nordeste-1" class="chart"></div>
-  </section>
-
-  <section id="nordeste-2">
-    <h2>Nordeste 2</h2>
-    <div id="viz-nordeste-2" class="chart"></div>
-  </section>
-
-  <section id="norte">
-    <h2>Norte</h2>
-    <div id="viz-norte" class="chart"></div>
-  </section>
-
-  <section id="sudeste">
-    <h2>Sudeste</h2>
-    <div id="viz-sudeste" class="chart"></div>
-  </section>
-
-  <section id="sul">
-    <h2>Sul</h2>
-    <div id="viz-sul" class="chart"></div>
-  </section>
-</main>
-
-<script src="script.js"></script>
-
+    <div class="container">
+        <h1>Demografia da Região Sul do Brasil (2016-2018)</h1>
+        <div class="controls">
+            <select id="category-select">
+                <option value="Total">Total</option>
+                <option value="Homem">Homem</option>
+            </select>
+            <button id="play-button">Play Animação</button>
+        </div>
+        <div id="chart"></div>
+        <div id="tooltip" class="tooltip"></div>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
