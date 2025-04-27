@@ -10,10 +10,11 @@
 <body>
     <div class="container">
         <h1>Demografia das Regiões do Brasil (2016-2018)</h1>
+        
         <div class="controls">
             <div class="control-group">
                 <label for="region-select">Região:</label>
-                <select id="region-select">
+                <select id="region-select" class="form-control">
                     <option value="all">Todas as Regiões</option>
                     <option value="Sul">Sul</option>
                     <option value="Sudeste">Sudeste</option>
@@ -22,26 +23,35 @@
                     <option value="Norte">Norte</option>
                 </select>
             </div>
+            
             <div class="control-group">
                 <label for="category-select">Categoria:</label>
-                <select id="category-select">
+                <select id="category-select" class="form-control">
                     <option value="Total">Total</option>
                     <option value="Homem">Homem</option>
                 </select>
             </div>
+            
             <div class="control-group">
                 <label for="year-select">Ano:</label>
-                <select id="year-select">
+                <select id="year-select" class="form-control">
                     <option value="2016">2016</option>
                     <option value="2017">2017</option>
                     <option value="2018">2018</option>
                 </select>
             </div>
-            <button id="play-button">Play Animação</button>
+            
+            <button id="play-button" class="btn">▶ Play</button>
         </div>
-        <div id="chart"></div>
+        
+        <div id="chart-container">
+            <div id="chart"></div>
+        </div>
+        
         <div id="tooltip" class="tooltip"></div>
+        <div id="legend" class="legend"></div>
     </div>
+    
     <script src="script.js"></script>
 </body>
 </html>
