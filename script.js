@@ -72,7 +72,6 @@ function popularFiltros(dadosFiltrados = null) {
 
 function preencherSelect(id, valores, valorAtual) {
     const select = document.getElementById(id);
-    const anterior = select.value;
     select.innerHTML = '<option value="">--Todos--</option>';
     valores.forEach(valor => {
         const option = document.createElement('option');
@@ -80,7 +79,7 @@ function preencherSelect(id, valores, valorAtual) {
         option.textContent = valor;
         select.appendChild(option);
     });
-    select.value = valorAtual; // manter o valor selecionado, se possível
+    select.value = valorAtual;
 }
 
 function filtrar() {
@@ -131,6 +130,16 @@ function desenharGrafico(dados) {
             }
         }
     });
+}
+
+function resetarFiltros() {
+    document.getElementById('indicador').value = '';
+    document.getElementById('variavelAbertura').value = '';
+    document.getElementById('categoria').value = '';
+    document.getElementById('variavelAbertura1').value = '';
+    document.getElementById('categoria1').value = '';
+    popularFiltros();
+    desenharGrafico(dataCSV.filter(item => item['Nível Territorial'] === 'Unidade da Federação'));
 }
 
 carregarCSV();

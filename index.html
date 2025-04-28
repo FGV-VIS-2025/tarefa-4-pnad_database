@@ -2,21 +2,50 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Visualização Interativa - Brasil e Sudeste</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualização Interativa</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Visualização Interativa - Brasil e Sudeste</h1>
-    <div class="filters">
-        <select id="indicador"></select>
-        <select id="variavelAbertura"></select>
-        <select id="categoria"></select>
-        <select id="variavelAbertura1"></select>
-        <select id="categoria1"></select>
-        <button onclick="filtrar()">Filtrar</button>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">PANORAMA DA EDUCAÇÃO NO SUDESTE BRASILEIRO</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-6xl mb-6">
+        <div>
+            <label class="block mb-1 text-gray-700">Indicador</label>
+            <select id="indicador" class="w-full p-2 border rounded-md"></select>
+        </div>
+        <div>
+            <label class="block mb-1 text-gray-700">Variável de abertura</label>
+            <select id="variavelAbertura" class="w-full p-2 border rounded-md"></select>
+        </div>
+        <div>
+            <label class="block mb-1 text-gray-700">Categoria</label>
+            <select id="categoria" class="w-full p-2 border rounded-md"></select>
+        </div>
+        <div>
+            <label class="block mb-1 text-gray-700">Variável de abertura .1</label>
+            <select id="variavelAbertura1" class="w-full p-2 border rounded-md"></select>
+        </div>
+        <div>
+            <label class="block mb-1 text-gray-700">Categoria .1</label>
+            <select id="categoria1" class="w-full p-2 border rounded-md"></select>
+        </div>
     </div>
-    <canvas id="grafico"></canvas>
+
+    <div class="flex space-x-4 mb-8">
+        <button onclick="filtrar()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+            Filtrar
+        </button>
+        <button onclick="resetarFiltros()" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition">
+            Resetar Filtros
+        </button>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
+        <canvas id="grafico"></canvas>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
