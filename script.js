@@ -2,7 +2,7 @@ let dataCSV;
 let chart;
 
 async function carregarCSV() {
-    const response = await fetch('Brasil_e_Sudeste.csv');
+    const response = await fetch('data/Brasil_e_Sudeste.csv');
     const text = await response.text();
     const linhas = text.split('\n').filter(l => l.trim() !== '');
     const headers = linhas[0].split(',');
