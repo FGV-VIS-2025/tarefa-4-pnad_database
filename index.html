@@ -1,78 +1,367 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análise de Dados Regionais</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Distribuição Populacional do Brasil</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        button {
+            padding: 8px 15px;
+            margin: 0 5px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .bar { 
+            transition: all 0.3s ease; 
+        }
+        .bar:hover { 
+            opacity: 0.7; 
+        }
+        .tooltip {
+            position: absolute;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 4px;
+            pointer-events: none;
+            font-size: 12px;
+        }
+        .axis-label {
+            font-size: 12px;
+            fill: #333;
+        }
+        .chart-title {
+            font-size: 16px;
+            font-weight: bold;
+            fill: #333;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        .legend text {
+            font-size: 12px;
+            fill: #333;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Análise de Dados Regionais do Brasil</h1>
-        
-        <div class="selection-panel">
-            <div class="form-group">
-                <label for="region-select">Selecione a Região:</label>
-                <select id="region-select" class="form-control">
-                    <option value="">-- Escolha uma região --</option>
-                    <option value="Centro-Oeste">Centro-Oeste</option>
-                    <option value="Nordeste_1">Nordeste 1</option>
-                    <option value="Nordeste_2">Nordeste 2</option>
-                    <option value="Norte">Norte</option>
-                    <option value="Sudeste">Sudeste</option>
-                    <option value="Sul">Sul</option>
-                </select>
-            </div>
+    <div id="container">
+        <h1>Distribuição Populacional do Brasil por Faixa Etária e Sexo (2016-2018)</h1>
+        <div class="controls">
+            <button id="btnTotal" class="active">População Total</button>
+            <button id="btnHomem">População Masculina</button>
+            <button id="btnMulher">População Feminina</button>
         </div>
-
-        <div id="filter-panel" class="filter-panel hidden">
-            <h2>Filtros Hierárquicos</h2>
-            
-            <!-- Fase 1 de filtros -->
-            <div class="filter-phase" id="phase1">
-                <div class="form-group">
-                    <label for="indicador-filter">Indicador:</label>
-                    <select id="indicador-filter" class="form-control"></select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="var-abertura-filter">Variável de Abertura:</label>
-                    <select id="var-abertura-filter" class="form-control"></select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Nível Territorial:</label>
-                    <input type="text" id="nivel-territorial" class="form-control" value="Unidade da Federação" readonly>
-                </div>
-                
-                <button id="next-phase1" class="btn">Próxima Fase</button>
-            </div>
-            
-            <!-- Fase 2 de filtros -->
-            <div class="filter-phase hidden" id="phase2">
-                <div class="form-group">
-                    <label for="var-abertura1-filter">Variável de Abertura .1:</label>
-                    <select id="var-abertura1-filter" class="form-control"></select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="categoria1-filter">Categoria .1:</label>
-                    <select id="categoria1-filter" class="form-control"></select>
-                </div>
-                
-                <button id="generate-analysis" class="btn">Gerar Tabela</button>
-            </div>
-        </div>
-
-        <div id="results" class="results hidden">
-            <h2>Resultados Filtrados</h2>
-            <div class="data-table">
-                <div id="table-container"></div>
-            </div>
-        </div>
+        <div id="loading" class="loading">Carregando dados...</div>
+        <div id="error" style="color: red; text-align: center; margin: 20px;"></div>
+        <div id="chart"></div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Configurações do gráfico
+        const margin = {top: 60, right: 150, bottom: 80, left: 60};
+        const width = 900 - margin.left - margin.right;
+        const height = 500 - margin.top - margin.bottom;
+
+        // Cores para as faixas etárias
+        const ageGroupColors = [
+            "#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f",
+            "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"
+        ];
+
+        // Criar SVG
+        const svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Tooltip
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        // Variáveis para dados
+        let processedData = [];
+        let currentMode = "Total";
+
+        // Processar dados
+        function processData(rawData) {
+            // Filtrar linhas relevantes
+            const relevantData = rawData.filter(row => 
+                row.Indicador.includes("População") &&
+                row["Nível Territorial"] === "País" &&
+                row["Abertura Territorial"] === "Brasil" &&
+                row["Variável de abertura .1"] === "Grupos de idade" &&
+                row["Categoria .1"] !== "Total"
+            );
+
+            // Agrupar por faixa etária
+            const result = [];
+            
+            relevantData.forEach(row => {
+                const ageGroup = row["Categoria .1"];
+                const sex = row["Categoria "].trim();
+                
+                let ageData = result.find(d => d.ageGroup === ageGroup);
+                if (!ageData) {
+                    ageData = {
+                        ageGroup: ageGroup,
+                        values: {
+                            "2016": {Homem: 0, Mulher: 0, Total: 0},
+                            "2017": {Homem: 0, Mulher: 0, Total: 0},
+                            "2018": {Homem: 0, Mulher: 0, Total: 0}
+                        }
+                    };
+                    result.push(ageData);
+                }
+                
+                // Converter valores para números
+                ["2016", "2017", "2018"].forEach(year => {
+                    const value = parseFloat(row[year].replace(',', '.')) || 0;
+                    ageData.values[year][sex] = value;
+                    ageData.values[year].Total += value;
+                });
+            });
+            
+            // Ordenar faixas etárias
+            const ageOrder = [
+                "0 a 3 anos", "4 e 5 anos", "6 a 9 anos", 
+                "10 a 14 anos", "15 a 17 anos", "18 a 24 anos",
+                "25 a 29 anos", "30 a 39 anos", "40 a 59 anos", 
+                "60 anos ou mais"
+            ];
+            
+            return result.sort((a, b) => 
+                ageOrder.indexOf(a.ageGroup) - ageOrder.indexOf(b.ageGroup)
+            );
+        }
+
+        // Inicializar gráfico
+        function initChart(data) {
+            processedData = data;
+            d3.select("#loading").style("display", "none");
+            
+            // Configurar escalas
+            const x = d3.scaleBand()
+                .domain(["2016", "2017", "2018"])
+                .range([0, width])
+                .padding(0.2);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => 
+                    Math.max(d.values["2016"].Total, d.values["2017"].Total, d.values["2018"].Total)
+                )])
+                .range([height, 0]);
+
+            // Adicionar eixos
+            svg.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x));
+
+            svg.append("g")
+                .attr("class", "y-axis")
+                .call(d3.axisLeft(y).ticks(5).tickFormat(d => `${(d/1000).toFixed(1)}M`));
+
+            // Adicionar rótulos
+            svg.append("text")
+                .attr("class", "axis-label")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 10)
+                .style("text-anchor", "middle")
+                .text("Ano");
+
+            svg.append("text")
+                .attr("class", "axis-label")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -height / 2)
+                .attr("y", -margin.left + 15)
+                .style("text-anchor", "middle")
+                .text("População (mil pessoas)");
+
+            // Adicionar título
+            svg.append("text")
+                .attr("class", "chart-title")
+                .attr("x", width / 2)
+                .attr("y", -20)
+                .text("População Total por Faixa Etária");
+
+            // Criar grupos para cada ano
+            ["2016", "2017", "2018"].forEach(year => {
+                svg.append("g")
+                    .attr("class", `year-${year}`)
+                    .attr("transform", `translate(${x(year)},0)`);
+            });
+
+            // Adicionar grupo para legenda
+            svg.append("g")
+                .attr("class", "legend")
+                .attr("transform", `translate(${width + 20}, 20)`);
+
+            updateChart("Total");
+            updateLegend("Total");
+        }
+
+        // Atualizar gráfico
+        function updateChart(mode) {
+            currentMode = mode;
+            
+            // Atualizar botões ativos
+            d3.selectAll("button").classed("active", false);
+            d3.select(`#btn${mode}`).classed("active", true);
+            
+            // Calcular valor máximo para o eixo Y
+            const maxValue = d3.max(processedData, d => 
+                Math.max(
+                    d.values["2016"][mode] || 0,
+                    d.values["2017"][mode] || 0,
+                    d.values["2018"][mode] || 0
+                )
+            );
+            
+            const y = d3.scaleLinear()
+                .domain([0, maxValue * 1.1]) // Adiciona 10% de espaço no topo
+                .range([height, 0]);
+            
+            // Atualizar eixo Y
+            svg.select(".y-axis")
+                .transition()
+                .duration(500)
+                .call(d3.axisLeft(y).ticks(5).tickFormat(d => `${(d/1000).toFixed(1)}M`));
+            
+            // Atualizar título
+            svg.select(".chart-title")
+                .text(mode === "Total" ? "População Total por Faixa Etária" : 
+                     mode === "Homem" ? "População Masculina por Faixa Etária" : 
+                     "População Feminina por Faixa Etária");
+            
+            // Atualizar barras para cada ano
+            ["2016", "2017", "2018"].forEach(year => {
+                const yearGroup = svg.select(`.year-${year}`);
+                
+                const bars = yearGroup.selectAll(".bar")
+                    .data(processedData, d => d.ageGroup);
+                
+                // Remover barras antigas
+                bars.exit().remove();
+                
+                // Adicionar novas barras
+                bars.enter()
+                    .append("rect")
+                    .attr("class", "bar")
+                    .attr("x", 0)
+                    .attr("width", width / 3 - 10)
+                    .attr("y", height)
+                    .attr("height", 0)
+                    .merge(bars)
+                    .transition()
+                    .duration(500)
+                    .attr("y", d => y(d.values[year][mode] || 0))
+                    .attr("height", d => height - y(d.values[year][mode] || 0))
+                    .attr("fill", (d, i) => mode === "Total" ? ageGroupColors[i % ageGroupColors.length] : 
+                                           mode === "Homem" ? "#1f77b4" : "#e377c2")
+                    .on("mouseover", function(event, d) {
+                        const value = d.values[year][mode] || 0;
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        tooltip.html(`<strong>${d.ageGroup}</strong><br>
+                                     Ano: ${year}<br>
+                                     ${mode === "Total" ? "População Total" : mode === "Homem" ? "População Masculina" : "População Feminina"}: ${value.toLocaleString('pt-BR')} mil`)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function() {
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
+            });
+            
+            // Atualizar legenda
+            updateLegend(mode);
+        }
+        
+        // Atualizar legenda
+        function updateLegend(mode) {
+            const legend = svg.select(".legend");
+            legend.selectAll("*").remove();
+            
+            if (mode === "Total") {
+                processedData.forEach((d, i) => {
+                    const item = legend.append("g")
+                        .attr("transform", `translate(0, ${i * 20})`);
+                    
+                    item.append("rect")
+                        .attr("width", 15)
+                        .attr("height", 15)
+                        .attr("fill", ageGroupColors[i % ageGroupColors.length]);
+                    
+                    item.append("text")
+                        .attr("x", 20)
+                        .attr("y", 12)
+                        .text(d.ageGroup);
+                });
+            } else {
+                const item = legend.append("g");
+                
+                item.append("rect")
+                    .attr("width", 15)
+                    .attr("height", 15)
+                    .attr("fill", mode === "Homem" ? "#1f77b4" : "#e377c2");
+                
+                item.append("text")
+                    .attr("x", 20)
+                    .attr("y", 12)
+                    .text(mode === "Homem" ? "Homens" : "Mulheres");
+            }
+        }
+
+        // Carregar e processar dados
+        d3.csv("data/Brasil_e_Sudeste.csv")
+            .then(rawData => {
+                console.log("Dados brutos (primeira linha):", rawData[0]);
+                
+                const processedData = processData(rawData);
+                console.log("Dados processados:", processedData);
+                
+                if (processedData.length === 0) {
+                    throw new Error("Nenhum dado válido encontrado após processamento");
+                }
+                
+                initChart(processedData);
+                
+            }).catch(error => {
+                console.error("Erro:", error);
+                d3.select("#error").text("Erro: " + error.message);
+                d3.select("#loading").text("Falha ao carregar dados");
+            });
+
+        // Event listeners para os botões
+        d3.select("#btnTotal").on("click", () => updateChart("Total"));
+        d3.select("#btnHomem").on("click", () => updateChart("Homem"));
+        d3.select("#btnMulher").on("click", () => updateChart("Mulher"));
+    </script>
 </body>
 </html>
