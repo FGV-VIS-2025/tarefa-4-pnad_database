@@ -106,11 +106,10 @@ function desenharGrafico(dados) {
     const dados2016 = dados.map(item => parseFloat(item['2016']) || 0);
     const dados2017 = dados.map(item => parseFloat(item['2017']) || 0);
     const dados2018 = dados.map(item => parseFloat(item['2018']) || 0);
-    
 
     const ctx = document.getElementById('grafico').getContext('2d');
 
-    if(chart) chart.destroy();
+    if (chart) chart.destroy();
 
     chart = new Chart(ctx, {
         type: 'bar',
@@ -119,8 +118,7 @@ function desenharGrafico(dados) {
             datasets: [
                 { label: '2016', data: dados2016, backgroundColor: 'rgba(75, 192, 192, 0.6)' },
                 { label: '2017', data: dados2017, backgroundColor: 'rgba(255, 99, 132, 0.6)' },
-                { label: '2018', data: dados2018, backgroundColor: 'rgba(54, 162, 235, 0.6)' },
-                
+                { label: '2018', data: dados2018, backgroundColor: 'rgba(54, 162, 235, 0.6)' }
             ]
         },
         options: {
@@ -139,7 +137,12 @@ function resetarFiltros() {
     document.getElementById('variavelAbertura1').value = '';
     document.getElementById('categoria1').value = '';
     popularFiltros();
-    desenharGrafico(dataCSV.filter(item => item['Nível Territorial'] === 'Unidade da Federação'));
+
+    // DESTRÓI o gráfico atual (apaga do canvas)
+    if (chart) {
+        chart.destroy();
+        chart = null;
+    }
 }
 
 carregarCSV();
