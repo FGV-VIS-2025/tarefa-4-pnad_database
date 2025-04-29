@@ -9,7 +9,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col items-center p-6">
     <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">
-        PANORAMA DA EDUCAÇÃO BRASILEIRA - 2016/2017/2018
+        PANORAMA DA EDUCAÇÃO BRASILEIRA - 2016 a 2018
       </h1>
       
       <h2 class="text-xl font-semibold text-gray-600 mb-8 text-center">
@@ -66,11 +66,67 @@
         <canvas id="grafico"></canvas>
     </div>
 
-<!-- Aqui começa o novo texto -->
-    <div class="w-full max-w-6xl text-center p-6 bg-blue-50 rounded-lg shadow-md">
+    <div class="w-full max-w-6xl text-left p-6 bg-blue-50 rounded-lg shadow-md">
         <p class="text-lg text-blue-800 leading-relaxed">
-        Esta ferramenta interativa permite explorar dados educacionais da região Sudeste do Brasil, oferecendo filtros dinâmicos para uma análise personalizada. 
-        Utilize os menus acima para refinar sua visualização e obter insights mais precisos sobre o panorama educacional.
+            A visualização interativa apresentada acima possibilita ao usuário 
+            verificar o panorama educacional brasileiro de modo completo, isto é,
+            pode-se fazer análises de muitas variáveis relacionadas à educação
+            e de diferentes subgrupos populacionais, filtrando por idade, sexo e
+            raça, por exemplo.<br>
+            <br>
+            A ferramenta funciona da seguinte maneira: temos dados dos estados de
+            todas as regiões do Brasil de 2016 a 2018, logo, basta selecionar qual
+            região deseja analisar, depois escolhe-se o indicador o qual representa
+            o "tema" que deseja observar (analfabetismo, taxa de escolarização etc.).
+            <br>
+            Além disso, também deve-se selecionar a variável de abertura 1 que
+            indica os critérios para um "corte populacional" dos dados, ou seja,
+            indica o corte racial ou sexual, por exemplo. Já a categoria 1 possibilita
+            a escolha de uma parte desse "corte" (se é homem, mulher, branco, preto,
+            tem mais de 18 anos, entre outros). A variável de abertura 2, por sua vez,
+            evidencia os níveis educacionais, filtrando por mestrado, doutorado, tipo
+            de instituição, entre outras possibilidades nesse sentido. Por fim,
+            temos a categoria 2 que nada mais é do que um "detalhamento" da variável
+            de abertura 2, ou seja, se a opção escolhida anteriormente foi "curso
+            mais elevado anteriormente frequentado", agora pode-se optar por qualquer
+            dos diferentes níveis educacionais tais como ensino fundamental ou médio.
+            <br>
+            Após selecionar todos os campos, clique em "filtrar" para que o gráfico
+            de barras com todas as condições escolhidas pelo usuário seja gerado. 
+            Caso deseje fazer uma nova análise, com outras variáveis, basta clicar em
+            "Resetar Filtros" e eleger cada opção novamente.
+            <br>
+            <br>
+            Foram analisados, principalmente, as taxas de analfabetismo e de escolarização,
+            sendo feito um "corte" por raça e por sexo, de modo a entender o tamanho
+            das desigualdades racial e de gênero.<br>
+            O resumo dos resultados desses estudos principais podem levar a alguns
+            questionamentos que serão mencionados a seguir.<br>
+            A taxa de escolarização, em geral, é maior para mulheres e pessoas brancas
+            do que para homens e pessoas pardas ou negras no Brasil. Além disso, a
+            taxa de analfabetismo é maior para homens e a população negra ou
+            parda do que para homens e a população branca.<br>
+            Os dados do PNAD de 2016 a 2018 indicam, ainda, que a região com maiores taxas
+            de analfabetismo por estado é o Nordeste, com a Paraíba liderando o ranking
+            (aproximadamente 19% homens, 14% mulheres, 18% pretos ou pardos e 12%
+            brancos).<br>
+            O Distrito Federal e o Amapá apresentaram as maiores taxas de escolarização.
+            A desigualdade de gênero foi mínima, mas a desigualdade racial é
+            assustadora. O DF indicou aproximadamente 38% para pretos ou pardos e 55% para
+            brancos (uma diferença de 17%!), enquanto o Amapá mostrou em média 42% para
+            pretos ou pardos e 55% para brancos (diferença de 13%!). Lembrando que
+            essa análise foi feita para a faixa etária entre 18 e 24 anos.<br>
+            <br>
+            Todo esse estudo apresentado de forma resumida pode instigar perguntas como
+            "Por que as mulheres ainda são minoria em cargos de liderança e sofrem
+            com diferenças salarias para homens que possuem o mesmo cargo que elas se
+            possuem menor taxa de analfabetismo e maior taxa de escolarização em geral?",
+            "Por que a população preta e parda ainda sofre tamanha desigualdade em 
+            relação à educação mesmo com políticas de incentivos tais como as cotas
+            estudantis? Como adotar medidas mais eficientes?" etc.<br>
+            Recomenda-se que o leitor utilize a visualização interativa apresentada
+            acima para analisar melhor os dados e assim conseguir identificar mais
+            informações que aqui não foram apresentadas. Aproveite nossa ferramenta!
         </p>
     </div>
 
