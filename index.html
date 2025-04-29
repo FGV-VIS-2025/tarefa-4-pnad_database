@@ -1,135 +1,126 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualização Interativa</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualização Interativa</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col items-center p-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">
-        PANORAMA DA EDUCAÇÃO BRASILEIRA - 2016 a 2018
-      </h1>
-      
-      <h2 class="text-xl font-semibold text-gray-600 mb-8 text-center">
-        Uma análise interativa dos dados regionais educacionais da PNAD feita pelo IBGE
-      </h2>
-      
-    <div class="mb-6 w-full max-w-6xl">
-        <label class="block mb-1 text-gray-700">Região</label>
-        <select id="regiao" class="w-full p-2 border rounded-md">
-            <option value="">--Selecione uma região--</option>
-            <option value="Centro-Oeste">Centro-Oeste</option>
-            <option value="Nordeste">Nordeste</option>
-            <option value="Norte">Norte</option>
-            <option value="Sudeste">Sudeste</option>
-            <option value="Sul">Sul</option>
-        </select>
-    </div>    
+<body class="bg-gray-50 min-h-screen flex flex-col items-center p-6 font-serif text-gray-800">
 
+<!-- Trecho modificado com storytelling reforçado -->
 
+<!-- Cabeçalho -->
+<h1 class="text-4xl font-extrabold text-center text-blue-900 mb-3">
+    PANORAMA DA EDUCAÇÃO BRASILEIRA - 2016 a 2018
+  </h1>
+  
+  <h2 class="text-2xl font-semibold text-gray-700 text-center mb-8">
+    Uma jornada interativa pelos caminhos da educação no Brasil, com base nos dados da PNAD/IBGE
+  </h2>
+  
+  <!-- Introdução explicativa -->
+  <div class="w-full max-w-6xl text-justify p-6 bg-white rounded-lg shadow-md mb-8">
+    <p class="text-lg leading-relaxed">
+      <strong>Imagine poder explorar a educação brasileira como um mapa interativo:</strong> este painel transforma dados estatísticos em uma ferramenta visual acessível e poderosa.
+      <br><br>
+      Aqui, você pode investigar o cenário educacional de forma detalhada, com filtros inteligentes que revelam nuances escondidas por trás das médias gerais. Estamos lidando com informações de todos os estados brasileiros, entre os anos de 2016 e 2018, organizadas por indicadores que vão desde taxas de analfabetismo até níveis de escolarização.
+      <br><br>
+      <strong>Como funciona?</strong><br>
+      Primeiro, escolha uma <em>região</em> do Brasil. Depois, selecione o <strong>indicador</strong> que representa o fenômeno educacional que deseja investigar.
+      A seguir, dois pares de filtros ajudam a refinar a análise:
+      <ul class="list-disc list-inside mt-2 mb-2">
+        <li><strong>Variável de abertura 1 + Categoria 1:</strong> Corte populacional (sexo, raça, etc.)</li>
+        <li><strong>Variável de abertura 2 + Categoria 2:</strong> Detalhamento educacional (nível de ensino, tipo de instituição, etc.)</li>
+      </ul>
+      Após definir os filtros, clique em <strong>"Filtrar"</strong> e veja o gráfico responder às suas escolhas. Para começar uma nova investigação, utilize o botão <strong>"Resetar Filtros"</strong>.
+      <br><br>
+      <strong>Esta é uma ferramenta para investigar, compreender e questionar</strong>: o objetivo não é apenas apresentar dados, mas instigar reflexões e revelar histórias escondidas nas planilhas.
+    </p>
+  </div>
+  
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-6xl mb-6">
-        <div>
-            <label class="block mb-1 text-gray-700">Indicador</label>
-            <select id="indicador" class="w-full p-2 border rounded-md"></select>
-        </div>
-        <div>
-            <label class="block mb-1 text-gray-700">Variável de abertura 1</label>
-            <select id="variavelAbertura" class="w-full p-2 border rounded-md"></select>
-        </div>
-        <div>
-            <label class="block mb-1 text-gray-700">Categoria 1 </label>
-            <select id="categoria" class="w-full p-2 border rounded-md"></select>
-        </div>
-        <div>
-            <label class="block mb-1 text-gray-700">Variável de abertura 2</label>
-            <select id="variavelAbertura1" class="w-full p-2 border rounded-md"></select>
-        </div>
-        <div>
-            <label class="block mb-1 text-gray-700">Categoria 2</label>
-            <select id="categoria1" class="w-full p-2 border rounded-md"></select>
-        </div>
+  <!-- Filtros da ferramenta -->
+  <div class="mb-6 w-full max-w-6xl">
+    <label class="block mb-1 text-gray-700 font-medium">Região</label>
+    <select id="regiao" class="w-full p-2 border rounded-md">
+      <option value="">--Selecione uma região--</option>
+      <option value="Centro-Oeste">Centro-Oeste</option>
+      <option value="Nordeste">Nordeste</option>
+      <option value="Norte">Norte</option>
+      <option value="Sudeste">Sudeste</option>
+      <option value="Sul">Sul</option>
+    </select>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-6xl mb-6">
+    <div>
+      <label class="block mb-1 text-gray-700 font-medium">Indicador</label>
+      <select id="indicador" class="w-full p-2 border rounded-md"></select>
     </div>
-
-    <div class="flex space-x-4 mb-8">
-        <button onclick="filtrar()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-            Filtrar
-        </button>
-        <button onclick="resetarFiltros()" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition">
-            Resetar Filtros
-        </button>
+    <div>
+      <label class="block mb-1 text-gray-700 font-medium">Variável de abertura 1</label>
+      <select id="variavelAbertura" class="w-full p-2 border rounded-md"></select>
     </div>
-
-    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
-        <canvas id="grafico"></canvas>
+    <div>
+      <label class="block mb-1 text-gray-700 font-medium">Categoria 1</label>
+      <select id="categoria" class="w-full p-2 border rounded-md"></select>
     </div>
-
-    <div class="w-full max-w-6xl text-left p-6 bg-blue-50 rounded-lg shadow-md">
-        <p class="text-lg text-blue-800 leading-relaxed">
-            A visualização interativa apresentada acima possibilita ao usuário 
-            verificar o panorama educacional brasileiro de modo completo, isto é,
-            pode-se fazer análises de muitas variáveis relacionadas à educação
-            e de diferentes subgrupos populacionais, filtrando por idade, sexo e
-            raça, por exemplo.<br>
-            <br>
-            A ferramenta funciona da seguinte maneira: temos dados dos estados de
-            todas as regiões do Brasil de 2016 a 2018, logo, basta selecionar qual
-            região deseja analisar, depois escolhe-se o indicador o qual representa
-            o "tema" que deseja observar (analfabetismo, taxa de escolarização etc.).
-            <br>
-            Além disso, também deve-se selecionar a variável de abertura 1 que
-            indica os critérios para um "corte populacional" dos dados, ou seja,
-            indica o corte racial ou sexual, por exemplo. Já a categoria 1 possibilita
-            a escolha de uma parte desse "corte" (se é homem, mulher, branco, preto,
-            tem mais de 18 anos, entre outros). A variável de abertura 2, por sua vez,
-            evidencia os níveis educacionais, filtrando por mestrado, doutorado, tipo
-            de instituição, entre outras possibilidades nesse sentido. Por fim,
-            temos a categoria 2 que nada mais é do que um "detalhamento" da variável
-            de abertura 2, ou seja, se a opção escolhida anteriormente foi "curso
-            mais elevado anteriormente frequentado", agora pode-se optar por qualquer
-            dos diferentes níveis educacionais tais como ensino fundamental ou médio.
-            <br>
-            Após selecionar todos os campos, clique em "filtrar" para que o gráfico
-            de barras com todas as condições escolhidas pelo usuário seja gerado. 
-            Caso deseje fazer uma nova análise, com outras variáveis, basta clicar em
-            "Resetar Filtros" e eleger cada opção novamente.
-            <br>
-            <br>
-            Foram analisados, principalmente, as taxas de analfabetismo e de escolarização,
-            sendo feito um "corte" por raça e por sexo, de modo a entender o tamanho
-            das desigualdades racial e de gênero.<br>
-            O resumo dos resultados desses estudos principais podem levar a alguns
-            questionamentos que serão mencionados a seguir.<br>
-            A taxa de escolarização, em geral, é maior para mulheres e pessoas brancas
-            do que para homens e pessoas pardas ou negras no Brasil. Além disso, a
-            taxa de analfabetismo é maior para homens e a população negra ou
-            parda do que para homens e a população branca.<br>
-            Os dados do PNAD de 2016 a 2018 indicam, ainda, que a região com maiores taxas
-            de analfabetismo por estado é o Nordeste, com a Paraíba liderando o ranking
-            (aproximadamente 19% homens, 14% mulheres, 18% pretos ou pardos e 12%
-            brancos).<br>
-            O Distrito Federal e o Amapá apresentaram as maiores taxas de escolarização.
-            A desigualdade de gênero foi mínima, mas a desigualdade racial é
-            assustadora. O DF indicou aproximadamente 38% para pretos ou pardos e 55% para
-            brancos (uma diferença de 17%!), enquanto o Amapá mostrou em média 42% para
-            pretos ou pardos e 55% para brancos (diferença de 13%!). Lembrando que
-            essa análise foi feita para a faixa etária entre 18 e 24 anos.<br>
-            <br>
-            Todo esse estudo apresentado de forma resumida pode instigar perguntas como
-            "Por que as mulheres ainda são minoria em cargos de liderança e sofrem
-            com diferenças salarias para homens que possuem o mesmo cargo que elas se
-            possuem menor taxa de analfabetismo e maior taxa de escolarização em geral?",
-            "Por que a população preta e parda ainda sofre tamanha desigualdade em 
-            relação à educação mesmo com políticas de incentivos tais como as cotas
-            estudantis? Como adotar medidas mais eficientes?" etc.<br>
-            Recomenda-se que o leitor utilize a visualização interativa apresentada
-            acima para analisar melhor os dados e assim conseguir identificar mais
-            informações que aqui não foram apresentadas. Aproveite nossa ferramenta!
-        </p>
+    <div>
+      <label class="block mb-1 text-gray-700 font-medium">Variável de abertura 2</label>
+      <select id="variavelAbertura1" class="w-full p-2 border rounded-md"></select>
     </div>
+    <div>
+      <label class="block mb-1 text-gray-700 font-medium">Categoria 2</label>
+      <select id="categoria1" class="w-full p-2 border rounded-md"></select>
+    </div>
+  </div>
 
-    <script src="script.js"></script>
+  <!-- Botões -->
+  <div class="flex space-x-4 mb-8">
+    <button onclick="filtrar()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+      Filtrar
+    </button>
+    <button onclick="resetarFiltros()" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition font-medium">
+      Resetar Filtros
+    </button>
+  </div>
+
+  <!-- Gráfico -->
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl mb-8">
+    <canvas id="grafico"></canvas>
+  </div>
+
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl mt-8">
+    <canvas id="graficoLinha"></canvas>
+</div>
+<button onclick="mostrarEvolucao()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+    Mostrar Evolução Temporal
+</button>
+
+  <!-- Texto conclusivo com reforço de impacto -->
+<div class="w-full max-w-6xl text-justify p-6 bg-blue-50 rounded-lg shadow-md">
+    <p class="text-lg text-blue-800 leading-relaxed">
+      Foram analisadas, principalmente, as taxas de analfabetismo e de escolarização,
+      com "cortes" por raça e por sexo, a fim de compreender com mais profundidade as desigualdades estruturais que marcam o país.
+      <br><br>
+      Os dados mostram um Brasil desigual: enquanto mulheres e pessoas brancas apresentam taxas mais altas de escolarização, os homens e a população preta ou parda enfrentam mais barreiras — refletidas em taxas maiores de analfabetismo.
+      <br><br>
+      O Nordeste, por exemplo, expõe essa ferida com clareza: taxas de analfabetismo alarmantes, especialmente entre homens pretos ou pardos. Em contraste, o Distrito Federal e o Amapá emergem como ilhas de maior escolarização, mas mesmo lá, a desigualdade racial salta aos olhos.
+      <br><br>
+      No DF, a diferença de escolarização entre brancos e pretos/pardos chega a <strong>17 pontos percentuais</strong>. No Amapá, são <strong>13 pontos</strong>. Esses números não são apenas estatísticas — são histórias de exclusão, de falta de acesso, de urgência social.
+      <br><br>
+      <em>Por que mulheres, mesmo com maior escolarização, ainda enfrentam barreiras para alcançar cargos de liderança?</em><br>
+      <em>Por que a cor da pele ainda define tanto o destino educacional de um jovem brasileiro?</em>
+      <br><br>
+      A resposta não está apenas nos dados. Ela está na forma como interpretamos, discutimos e agimos sobre esses dados.
+      <br><br>
+      <strong>Explore, descubra, questione</strong>. Esta ferramenta é o ponto de partida para novas investigações, para conversas mais informadas — e, quem sabe, para mudanças reais.
+    </p>
+  </div>
+  
+
+  <script src="script.js"></script>
 </body>
 </html>

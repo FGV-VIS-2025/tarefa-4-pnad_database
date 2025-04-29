@@ -164,5 +164,61 @@ function resetarFiltros() {
     }
 }
 
+const cores = [
+    'rgba(255, 99, 132, 1)',   // Vermelho
+    'rgba(54, 162, 235, 1)',   // Azul
+    'rgba(255, 206, 86, 1)',   // Amarelo
+    'rgba(75, 192, 192, 1)',   // Verde água
+    'rgba(153, 102, 255, 1)',  // Roxo
+    'rgba(255, 159, 64, 1)'    // Laranja
+];
+
+function mostrarEvolucao() {
+    const indicador = document.getElementById('indicador').value;
+    if (!indicador) {
+        alert("Escolha um indicador para visualizar a evolução.");
+        return;
+    }
+
+    const dados = dataCSV.filter(item =>
+        item['Nível Territorial'] === 'Unidade da Federação' &&
+        item['Indicador'] === indicador
+    );
+
+    const agrupado = {};
+    dados.forEach(item => {
+        const grupo = item['Categoria'];
+        if (!agrupado[grupo]) agrupado[grupo] = [];
+        agrupado[grupo].push(item);
+    });
+
+    const labels = ['2016', '2017', '2018'];
+    const datasets = Object.keys(agrupado).map((grupo, index) => {
+        const grupoDados = agrupado[grupo];
+
+        return {
+            label: grupo,
+            data: [
+                grupoDados.reduce((acc, d) => acc + parseFloat(d['2016'] || 0), 0) / grupoDados.length,
+                grupoDados.reduce((acc, d) => acc + parseFloat(d['2017'] || 0), 0) / grupoDados.length,
+                grupoDados.reduce((acc, d) => acc + parseFloat(d['2018'] || 0), 0) / grupoDados.length,
+            ],
+            borderColor: cores[index % cores.length],
+            tension: 0.3,
+            fill: false
+        };
+    });
+
+    const ctx = document.getElementById('graficoLinha').getContext('2d');
+    if (window.linhaChart) window.linhaChart.destroy();
+    window.linhaChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+}
+
+
+
 // Removemos a chamada automática do carregarCSV inicial
 // O usuário agora escolhe a região para carregar
