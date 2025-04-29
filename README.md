@@ -7,7 +7,7 @@ Utilizamos código python para tranformar o arquivo excel em CSVs, sendo cada ab
 
 ### Visuzalização Interativa
 
-Optamos por um gráfico simples para essa primeira entrega (gráfico de barras) mas que abrangesse todos os nossos dados, ou seja, conseguimos filtrar por todas as regiões brasileiras, todos os indicadores, variáveis e categorias apresentadas nos CSVs, tornando as possíveis análises com cada gráfico gerado mais completas. Para essa primeira versão, optamos por estudar e detalhar melhor sobre as taxas de escolarização e analfabetismo no Brasil de 2016 a 2018 o que foi descrito na própria página web que contém a visualização interativa.
+Optamos por um gráfico simples para essa primeira entrega (gráfico de barras) mas que abrangesse todos os nossos dados, ou seja, conseguimos filtrar por todas as regiões brasileiras, todos os indicadores, variáveis e categorias apresentadas nos CSVs, tornando as possíveis análises com cada gráfico gerado mais completas. Para essa primeira versão, optamos por estudar e detalhar melhor sobre as taxas de escolarização e analfabetismo no Brasil de 2016 a 2018 o que foi descrito na própria página web que contém a [visualização interativa](https://fgv-vis-2025.github.io/tarefa-4-pnad_database/).
 
 ### Alunas
 
