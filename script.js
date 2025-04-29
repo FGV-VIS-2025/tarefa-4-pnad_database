@@ -1,20 +1,37 @@
 let dataCSV;
 let chart;
 
-async function carregarCSV() {
-    const response = await fetch('data/Brasil_e_Sudeste.csv');
-    const text = await response.text();
-    const linhas = text.split('\n').filter(l => l.trim() !== '');
-    const headers = linhas[0].split(',');
-    dataCSV = linhas.slice(1).map(linha => {
-        const valores = linha.split(',');
-        const obj = {};
-        headers.forEach((h, i) => obj[h.trim()] = valores[i]?.trim());
-        return obj;
-    });
+document.getElementById('regiao').addEventListener('change', async function () {
+    const regiao = this.value;
+    if (regiao) {
+        await carregarCSV(regiao);
+        popularFiltros();
+        resetarFiltros();
+    } else {
+        if (chart) {
+            chart.destroy();
+            chart = null;
+        }
+    }
+});
 
-    popularFiltros();
-    adicionarListeners();
+async function carregarCSV(regiao) {
+    const arquivo = `data/Brasil_e_${regiao}.csv`;
+    try {
+        const response = await fetch(arquivo);
+        const text = await response.text();
+        const linhas = text.split('\n').filter(l => l.trim() !== '');
+        const headers = linhas[0].split(',');
+        dataCSV = linhas.slice(1).map(linha => {
+            const valores = linha.split(',');
+            const obj = {};
+            headers.forEach((h, i) => obj[h.trim()] = valores[i]?.trim());
+            return obj;
+        });
+    } catch (error) {
+        console.error('Erro ao carregar CSV:', error);
+        alert('Erro ao carregar os dados da região selecionada.');
+    }
 }
 
 function adicionarListeners() {
@@ -45,6 +62,7 @@ function atualizarFiltros() {
 }
 
 function popularFiltros(dadosFiltrados = null) {
+    if (!dataCSV) return;
     const dataToUse = dadosFiltrados || dataCSV;
 
     const indicadorSet = new Set();
@@ -68,6 +86,8 @@ function popularFiltros(dadosFiltrados = null) {
     preencherSelect('categoria', categoriaSet, document.getElementById('categoria').value);
     preencherSelect('variavelAbertura1', variavelAbertura1Set, document.getElementById('variavelAbertura1').value);
     preencherSelect('categoria1', categoria1Set, document.getElementById('categoria1').value);
+
+    adicionarListeners();
 }
 
 function preencherSelect(id, valores, valorAtual) {
@@ -138,11 +158,11 @@ function resetarFiltros() {
     document.getElementById('categoria1').value = '';
     popularFiltros();
 
-    // DESTRÓI o gráfico atual (apaga do canvas)
     if (chart) {
         chart.destroy();
         chart = null;
     }
 }
 
-carregarCSV();
+// Removemos a chamada automática do carregarCSV inicial
+// O usuário agora escolhe a região para carregar
