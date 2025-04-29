@@ -13,3 +13,5 @@ Optamos por um gráfico simples para essa primeira entrega (gráfico de barras) 
 
 - Ana Júlia Amaro Pereira Rocha
 - Maria Eduarda Mesquita Magalhães
+
+Curso: Ciência de Dados e Inteligência Artificial
