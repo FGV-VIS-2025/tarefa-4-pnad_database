@@ -20,7 +20,7 @@
         <div class="filtro">
           <label for="regiao">Região:</label>
           <select id="regiao">
-            <option value="">Todas as regiões</option>
+            <option value="">--Selecione uma região--</option>
             <option value="Centro-Oeste">Centro-Oeste</option>
             <option value="Nordeste">Nordeste</option>
             <option value="Norte">Norte</option>
@@ -32,55 +32,56 @@
         <div class="filtro">
           <label for="indicador">Indicador:</label>
           <select id="indicador">
-            <option value="">Selecione um indicador</option>
-            <option value="Taxa de Analfabetismo (%)">Taxa de Analfabetismo (%)</option>
-            <option value="Número médio de anos de estudo">Número médio de anos de estudo</option>
+            <option value="">--Todos--</option>
+            <!-- Options will be populated by script.js -->
           </select>
         </div>
 
         <div class="filtro">
-          <label for="sexo">Sexo:</label>
-          <select id="sexo">
-            <option value="">Todos</option>
-            <option value="Homem">Homem</option>
-            <option value="Mulher">Mulher</option>
-            <option value="Total">Total</option>
+          <label for="variavelAbertura">Variável de Abertura:</label>
+          <select id="variavelAbertura">
+            <option value="">--Todos--</option>
+            <!-- Options will be populated by script.js -->
           </select>
         </div>
 
         <div class="filtro">
-          <label for="idade">Grupo de Idade:</label>
-          <select id="idade">
-            <option value="">Todos</option>
-            <option value="0 a 5 anos">0 a 5 anos</option>
-            <option value="6 a 14 anos">6 a 14 anos</option>
-            <option value="15 a 17 anos">15 a 17 anos</option>
-            <option value="18 a 24 anos">18 a 24 anos</option>
-            <option value="25 anos ou mais">25 anos ou mais</option>
+          <label for="categoria">Categoria:</label>
+          <select id="categoria">
+            <option value="">--Todos--</option>
+            <!-- Options will be populated by script.js -->
           </select>
         </div>
 
         <div class="filtro">
-          <label for="cor">Cor/Raça:</label>
-          <select id="cor">
-            <option value="">Todas</option>
-            <option value="Branca">Branca</option>
-            <option value="Preta ou parda">Preta ou parda</option>
+          <label for="variavelAbertura1">Variável de Abertura 2:</label>
+          <select id="variavelAbertura1">
+            <option value="">--Todos--</option>
+            <!-- Options will be populated by script.js -->
+          </select>
+        </div>
+
+        <div class="filtro">
+          <label for="categoria1">Categoria 2:</label>
+          <select id="categoria1">
+            <option value="">--Todos--</option>
+            <!-- Options will be populated by script.js -->
           </select>
         </div>
       </div>
 
       <div class="instructions">
-        <p>O mapa abaixo mostra todos os estados brasileiros. Selecione os filtros para visualizar os dados.</p>
+        <p>Clique em uma região para carregar os dados. Selecione os filtros para visualizar os dados no mapa.</p>
+        <p>Clique nos estados para selecionar/deselecionar.</p>
       </div>
 
       <div id="mapa-container">
         <svg id="mapa" width="900" height="600"></svg>
       </div>
       
-      <div id="grafico-comparativo">
-        <h2>Comparação entre Estados</h2>
-        <svg id="grafico-barras" width="900" height="400"></svg>
+      <div class="legenda">
+        <h3>Legenda:</h3>
+        <div id="color-scale"></div>
       </div>
     </main>
 
