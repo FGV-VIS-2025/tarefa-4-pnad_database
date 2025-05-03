@@ -218,6 +218,6 @@ function atualizarCoresMapa(dados) {
   d3.selectAll(".estado")
     .attr("fill", d => {
       const estado = d.properties.name;
-      return dados[estado] ? colorScale(dados[estado]) : "#ccc";
+      return dados[estado] ? colorScale(dados[estado]) : "#6baed6";
     });
 }
