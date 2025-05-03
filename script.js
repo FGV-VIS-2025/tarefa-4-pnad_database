@@ -1,142 +1,196 @@
 // Variáveis globais
 let mapaGeoJSON;
+let dadosEducacao = {};
+let estadosSelecionados = new Map();
 
-// Carrega o mapa imediatamente
-document.addEventListener('DOMContentLoaded', function() {
-  // carregarMapaBasico();
-  
-  // Depois carrega o mapa completo
-  carregarMapa();
+// Filtros disponíveis
+const filtrosDisponiveis = {
+  indicador: ["Taxa de Analfabetismo (%)", "Número médio de anos de estudo"],
+  sexo: ["Homem", "Mulher", "Total"],
+  idade: ["0 a 5 anos", "6 a 14 anos", "15 a 17 anos", "18 a 24 anos", "25 anos ou mais"],
+  cor: ["Branca", "Preta ou parda"]
+};
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', async function() {
+  await carregarMapa();
+  inicializarFiltros();
 });
 
+// Carrega o mapa do Brasil
 async function carregarMapa() {
   try {
     const width = 900;
     const height = 600;
-    const svg = d3.select("#mapa");
+    
+    const svg = d3.select("#mapa")
+      .attr("width", width)
+      .attr("height", height);
 
     // Carrega o GeoJSON
     mapaGeoJSON = await d3.json("data/brazil-states.geojson");
     
-    // Verifica os limites do GeoJSON
-    const bounds = d3.geoBounds(mapaGeoJSON);
-    console.log("Limites do GeoJSON:", bounds);
-
-    // Configura projeção otimizada
     const projection = d3.geoMercator()
-      .center([-54, -15])  // Centro do Brasil
-      .scale(850)         // Ajuste este valor
-      .translate([width/2, height/2]);
-
+      .fitSize([width, height], mapaGeoJSON);
+    
     const path = d3.geoPath().projection(projection);
-
-    // Desenha o mapa com tratamento para buracos
+    
+    // Desenha os estados
     svg.selectAll("path")
       .data(mapaGeoJSON.features)
       .enter()
       .append("path")
       .attr("d", path)
+      .attr("class", "estado")
+      .attr("id", d => `estado-${d.properties.name.replace(/\s+/g, '-')}`)
+      .attr("data-estado", d => d.properties.name)
       .attr("fill", "#6baed6")
       .attr("stroke", "#fff")
       .attr("stroke-width", 1)
-      .attr("stroke-linejoin", "round");  // Suaviza bordas
-
-    // Adiciona fundo para áreas vazias
-    svg.insert("rect", ":first-child")
-      .attr("width", width)
-      .attr("height", height)
-      .attr("fill", "#f0f0f0");
-
+      .on("click", function(event, d) {
+        const estado = d.properties.name;
+        if (estadosSelecionados.has(estado)) {
+          estadosSelecionados.delete(estado);
+          d3.select(this).classed("selecionado", false);
+        } else {
+          estadosSelecionados.set(estado, {});
+          d3.select(this).classed("selecionado", true);
+        }
+        atualizarVisualizacao();
+      });
+    
+    console.log("Mapa carregado com sucesso!");
+    
   } catch (error) {
-    console.error("Erro:", error);
+    console.error("Erro ao carregar o mapa:", error);
   }
+}
+
+// Inicializa os filtros
+function inicializarFiltros() {
+  // Preenche os selects com opções disponíveis
+  for (const [filtro, opcoes] of Object.entries(filtrosDisponiveis)) {
+    const select = document.getElementById(filtro);
+    if (select) {
+      select.innerHTML = '<option value="">--Selecione--</option>';
+      opcoes.forEach(opcao => {
+        const option = document.createElement('option');
+        option.value = opcao;
+        option.textContent = opcao;
+        select.appendChild(option);
+      });
+      
+      // Adiciona listener para atualização
+      select.addEventListener('change', atualizarVisualizacao);
+    }
+  }
+  
+  // Listener especial para a região (carrega dados)
+  document.getElementById('regiao').addEventListener('change', async function() {
+    const regiao = this.value;
+    if (regiao) {
+      await carregarDadosRegionais(regiao);
+    }
+    atualizarVisualizacao();
+  });
 }
 
 // Carrega dados da região selecionada
 async function carregarDadosRegionais(regiao) {
   try {
-    const arquivo = `data/Brasil_e_${regiao}.csv`;
-    const response = await fetch(arquivo);
-    
-    if (!response.ok) throw new Error(`Erro ${response.status} ao carregar arquivo`);
+    const response = await fetch(`data/Brasil_e_${regiao}.csv`);
+    if (!response.ok) throw new Error("Erro ao carregar dados");
     
     const text = await response.text();
     const linhas = text.split('\n').filter(l => l.trim() !== '');
-    
-    if (linhas.length < 2) throw new Error('Arquivo CSV vazio ou mal formatado');
-    
     const headers = linhas[0].split(',');
     
-    dadosCSV[regiao] = linhas.slice(1).map(linha => {
+    dadosEducacao[regiao] = {};
+    
+    linhas.slice(1).forEach(linha => {
       const valores = linha.split(',');
-      const obj = {};
-      headers.forEach((h, i) => obj[h.trim()] = valores[i]?.trim());
-      return obj;
+      const estado = valores[headers.indexOf('Unidade da Federação')];
+      const indicador = valores[headers.indexOf('Indicador')];
+      const sexo = valores[headers.indexOf('Sexo')];
+      const idade = valores[headers.indexOf('Grupos de idade')];
+      const cor = valores[headers.indexOf('Cor ou raça')];
+      const valor = parseFloat(valores[headers.length - 1]); // Última coluna
+      
+      if (!dadosEducacao[regiao][estado]) {
+        dadosEducacao[regiao][estado] = {};
+      }
+      
+      // Estrutura hierárquica: indicador > sexo > idade > cor
+      if (!dadosEducacao[regiao][estado][indicador]) {
+        dadosEducacao[regiao][estado][indicador] = {};
+      }
+      if (!dadosEducacao[regiao][estado][indicador][sexo]) {
+        dadosEducacao[regiao][estado][indicador][sexo] = {};
+      }
+      if (!dadosEducacao[regiao][estado][indicador][sexo][idade]) {
+        dadosEducacao[regiao][estado][indicador][sexo][idade] = {};
+      }
+      
+      dadosEducacao[regiao][estado][indicador][sexo][idade][cor] = valor;
     });
     
-    console.log(`Dados de ${regiao} carregados com sucesso`);
+    console.log(`Dados de ${regiao} carregados:`, dadosEducacao[regiao]);
     
   } catch (error) {
-    console.error('Erro ao carregar dados:', error);
-    alert(`Erro ao carregar dados: ${error.message}`);
+    console.error("Erro ao carregar dados:", error);
   }
 }
 
-// Atualiza a visualização com base nos filtros selecionados
+// Atualiza a visualização com base nos filtros
 function atualizarVisualizacao() {
+  const regiao = document.getElementById('regiao').value;
   const indicador = document.getElementById('indicador').value;
+  const sexo = document.getElementById('sexo').value;
+  const idade = document.getElementById('idade').value;
+  const cor = document.getElementById('cor').value;
   
-  if (!indicador) {
-    // Se nenhum indicador selecionado, mostra mapa padrão
+  // Se não tem região ou indicador selecionado, reseta o mapa
+  if (!regiao || !indicador) {
     d3.selectAll(".estado")
-      .style("fill", "#6baed6")
-      .classed("ativo", false);
-    
-    d3.select("#grafico-barras").selectAll("*").remove();
+      .attr("fill", "#6baed6")
+      .classed("selecionado", false);
     return;
   }
   
-  // Atualiza os estados selecionados com o indicador atual
-  estadosSelecionados.forEach((filtros, estado) => {
-    filtros.indicador = indicador;
-  });
+  // Obtém os dados filtrados
+  const dadosFiltrados = filtrarDados(regiao, indicador, sexo, idade, cor);
   
-  // Filtra os dados
-  const dadosFiltrados = filtrarDados(indicador);
-  
-  // Atualiza o mapa
+  // Atualiza as cores do mapa
   atualizarCoresMapa(dadosFiltrados);
   
-  // Atualiza o gráfico
-  atualizarGrafico(dadosFiltrados);
+  // Atualiza estados selecionados
+  estadosSelecionados.forEach((_, estado) => {
+    d3.select(`#estado-${estado.replace(/\s+/g, '-')}`)
+      .classed("selecionado", true);
+  });
 }
 
-// Filtra os dados com base no indicador selecionado
-function filtrarDados(indicador) {
-  const resultados = [];
+// Filtra os dados com base nos critérios selecionados
+function filtrarDados(regiao, indicador, sexo, idade, cor) {
+  const resultados = {};
   
-  for (const regiao in dadosCSV) {
-    estadosSelecionados.forEach((filtros, estado) => {
-      const dadosEstado = dadosCSV[regiao].filter(item => 
-        item['Unidade da Federação'] === estado &&
-        item['Indicador'] === indicador
-      );
+  if (!dadosEducacao[regiao]) return resultados;
+  
+  // Para cada estado na região
+  for (const [estado, dadosEstado] of Object.entries(dadosEducacao[regiao])) {
+    // Verifica se há dados para os filtros selecionados
+    if (dadosEstado[indicador]) {
+      let valores = dadosEstado[indicador];
       
-      if (dadosEstado.length > 0) {
-        const valores = {
-          2016: parseFloat(dadosEstado[0]['2016']) || 0,
-          2017: parseFloat(dadosEstado[0]['2017']) || 0,
-          2018: parseFloat(dadosEstado[0]['2018']) || 0
-        };
-        
-        resultados.push({
-          estado,
-          indicador,
-          valores: [valores[2016], valores[2017], valores[2018]],
-          media: (valores[2016] + valores[2017] + valores[2018]) / 3
-        });
+      if (sexo) valores = valores[sexo] || {};
+      if (idade) valores = valores[idade] || {};
+      if (cor) valores = valores[cor] !== undefined ? {[cor]: valores[cor]} : {};
+      
+      // Se encontrou algum valor, adiciona aos resultados
+      if (Object.values(valores).length > 0) {
+        resultados[estado] = Object.values(valores)[0]; // Pega o primeiro valor encontrado
       }
-    });
+    }
   }
   
   return resultados;
@@ -144,185 +198,26 @@ function filtrarDados(indicador) {
 
 // Atualiza as cores do mapa com base nos dados filtrados
 function atualizarCoresMapa(dados) {
-  if (dados.length === 0) {
-    d3.selectAll(".estado").style("fill", "#ccc");
+  // Se não há dados, reseta as cores
+  if (Object.keys(dados).length === 0) {
+    d3.selectAll(".estado")
+      .attr("fill", "#6baed6");
     return;
   }
   
   // Calcula escala de cores
-  const valores = dados.flatMap(d => d.valores);
-  const minValor = Math.min(...valores);
+  const valores = Object.values(dados);
   const maxValor = Math.max(...valores);
+  const minValor = Math.min(...valores);
   
   const colorScale = d3.scaleSequential()
     .domain([minValor, maxValor])
     .interpolator(d3.interpolateBlues);
   
-  // Aplica cores
-  d3.selectAll(".estado").style("fill", "#ccc");
-  
-  dados.forEach(dado => {
-    d3.select(`#estado-${dado.estado.replace(/\s+/g, '-')}`)
-      .style("fill", colorScale(dado.media));
-  });
-  
-  // Atualiza legenda
-  atualizarLegendaCores(minValor, maxValor);
-}
-
-// Atualiza a legenda de cores
-function atualizarLegendaCores(minValor, maxValor) {
-  const svg = d3.select("#mapa svg");
-  svg.selectAll(".legenda-cores").remove();
-  
-  const legendWidth = 200;
-  const legendHeight = 20;
-  const legendMargin = {top: 20, right: 30, bottom: 30, left: 40};
-  
-  const legendGroup = svg.append("g")
-    .attr("class", "legenda-cores")
-    .attr("transform", `translate(${legendMargin.left}, ${legendMargin.top})`);
-  
-  // Cria escala para a legenda
-  const colorScale = d3.scaleSequential()
-    .domain([minValor, maxValor])
-    .interpolator(d3.interpolateBlues);
-  
-  // Gradiente de cores
-  const defs = svg.append("defs");
-  const linearGradient = defs.append("linearGradient")
-    .attr("id", "gradient")
-    .attr("x1", "0%")
-    .attr("y1", "0%")
-    .attr("x2", "100%")
-    .attr("y2", "0%");
-  
-  linearGradient.selectAll("stop")
-    .data(d3.range(0, 1.01, 0.1))
-    .enter().append("stop")
-    .attr("offset", d => d * 100 + "%")
-    .attr("stop-color", d => colorScale(minValor + d * (maxValor - minValor)));
-  
-  // Retângulo com gradiente
-  legendGroup.append("rect")
-    .attr("width", legendWidth)
-    .attr("height", legendHeight)
-    .style("fill", "url(#gradient)");
-  
-  // Eixo com valores
-  const xScale = d3.scaleLinear()
-    .domain([minValor, maxValor])
-    .range([0, legendWidth]);
-  
-  const xAxis = d3.axisBottom(xScale).ticks(5);
-  
-  legendGroup.append("g")
-    .attr("transform", `translate(0, ${legendHeight})`)
-    .call(xAxis);
-  
-  // Título da legenda
-  legendGroup.append("text")
-    .attr("x", legendWidth / 2)
-    .attr("y", -5)
-    .attr("text-anchor", "middle")
-    .text("Valor do Indicador");
-}
-
-// Atualiza o gráfico de barras comparativo
-function atualizarGrafico(dados) {
-  const svg = d3.select("#grafico-barras");
-  svg.selectAll("*").remove();
-  
-  if (dados.length === 0) {
-    svg.append("text")
-      .attr("x", 450)
-      .attr("y", 200)
-      .attr("text-anchor", "middle")
-      .text("Selecione estados e filtros para visualizar os dados");
-    return;
-  }
-  
-  const margin = {top: 40, right: 30, bottom: 100, left: 60};
-  const width = +svg.attr("width") - margin.left - margin.right;
-  const height = +svg.attr("height") - margin.top - margin.bottom;
-  
-  // Escalas
-  const maxValor = d3.max(dados, d => d3.max(d.valores));
-  
-  const x = d3.scaleBand()
-    .domain(dados.map(d => d.estado))
-    .range([margin.left, width + margin.left])
-    .padding(0.2);
-  
-  const y = d3.scaleLinear()
-    .domain([0, maxValor * 1.1])
-    .nice()
-    .range([height + margin.top, margin.top]);
-  
-  const color = d3.scaleOrdinal()
-    .domain(["2016", "2017", "2018"])
-    .range(["#1f77b4", "#ff7f0e", "#2ca02c"]);
-  
-  // Barras agrupadas
-  const barWidth = x.bandwidth() / 3;
-  
-  dados.forEach((estado, i) => {
-    estado.valores.forEach((valor, j) => {
-      svg.append("rect")
-        .attr("x", x(estado.estado) + j * barWidth)
-        .attr("y", y(valor))
-        .attr("width", barWidth - 2)
-        .attr("height", height + margin.top - y(valor))
-        .attr("fill", color(`201${6+j}`));
+  // Aplica cores aos estados
+  d3.selectAll(".estado")
+    .attr("fill", d => {
+      const estado = d.properties.name;
+      return dados[estado] ? colorScale(dados[estado]) : "#ccc";
     });
-  });
-  
-  // Eixos
-  svg.append("g")
-    .attr("transform", `translate(0, ${height + margin.top})`)
-    .call(d3.axisBottom(x))
-    .selectAll("text")
-    .attr("transform", "rotate(-45)")
-    .attr("text-anchor", "end")
-    .attr("dx", "-.8em")
-    .attr("dy", ".15em");
-  
-  svg.append("g")
-    .attr("transform", `translate(${margin.left}, 0)`)
-    .call(d3.axisLeft(y));
-  
-  // Título
-  svg.append("text")
-    .attr("x", width / 2 + margin.left)
-    .attr("y", margin.top / 2)
-    .attr("text-anchor", "middle")
-    .style("font-size", "16px")
-    .text(dados[0].indicador);
-  
-  // Legenda
-  const legend = svg.append("g")
-    .attr("transform", `translate(${width - 100}, ${margin.top})`);
-  
-  ["2016", "2017", "2018"].forEach((d, i) => {
-    const legendItem = legend.append("g")
-      .attr("transform", `translate(0, ${i * 20})`);
-    
-    legendItem.append("rect")
-      .attr("width", 18)
-      .attr("height", 18)
-      .attr("fill", color(d));
-    
-    legendItem.append("text")
-      .attr("x", 24)
-      .attr("y", 9)
-      .attr("dy", ".35em")
-      .text(d);
-  });
-  
-  // Informações dos filtros
-  svg.append("text")
-    .attr("x", margin.left)
-    .attr("y", height + margin.top + 40)
-    .text(`Sexo: ${dados[0].sexo} | Idade: ${dados[0].idade} | Cor: ${dados[0].cor}`)
-    .style("font-size", "12px");
 }
