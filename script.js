@@ -116,9 +116,15 @@ function definirIndicadorPadrao() {
     option => option.text.includes('Taxa de analfabetismo (%)')
   );
   
-  if (opcaoPadrao) {
+  if (opcaoPadrao)
+  {
     selectIndicador.value = opcaoPadrao.value;
-    atualizarVisualizacao();
+    atualizarFiltros();
+  } 
+  else if (selectIndicador.options.length > 1) 
+  {
+    selectIndicador.value = selectIndicador.options[1].value;
+    atualizarFiltros();
   }
 }
 
@@ -142,7 +148,10 @@ function atualizarFiltros() {
   const variavelAbertura1 = document.getElementById('variavelAbertura1').value;
   const categoria1 = document.getElementById('categoria1').value;
   
+  // Filtra os dados considerando TODOS os filtros atuais
   const filtrado = dadosEducacao.filter(item => 
+    item['Nível Territorial'] === 'Unidade da Federação' &&
+    !item['Indicador']?.startsWith('CV - ') &&
     (indicador === '' || item['Indicador'] === indicador) &&
     (variavelAbertura === '' || item['Variável de abertura'] === variavelAbertura) &&
     (categoria === '' || item['Categoria'] === categoria) &&
@@ -150,7 +159,15 @@ function atualizarFiltros() {
     (categoria1 === '' || item['Categoria .1'] === categoria1)
   );
   
+  // Atualiza TODOS os filtros com base nos dados filtrados
   popularFiltros(filtrado);
+  
+  // Mantém os valores selecionados nos filtros (se ainda estiverem disponíveis)
+  document.getElementById('variavelAbertura').value = variavelAbertura;
+  document.getElementById('categoria').value = categoria;
+  document.getElementById('variavelAbertura1').value = variavelAbertura1;
+  document.getElementById('categoria1').value = categoria1;
+  
   atualizarVisualizacao();
 }
 
@@ -158,6 +175,14 @@ function atualizarFiltros() {
 function popularFiltros(dadosFiltrados = null) {
   const dataToUse = dadosFiltrados || dadosEducacao;
   
+  // Mantém os valores atuais dos filtros
+  const currentValues = {
+    variavelAbertura: document.getElementById('variavelAbertura').value,
+    categoria: document.getElementById('categoria').value,
+    variavelAbertura1: document.getElementById('variavelAbertura1').value,
+    categoria1: document.getElementById('categoria1').value
+  };
+
   const indicadorSet = new Set();
   const variavelAberturaSet = new Set();
   const categoriaSet = new Set();
@@ -165,15 +190,12 @@ function popularFiltros(dadosFiltrados = null) {
   const categoria1Set = new Set();
   
   dataToUse.forEach(item => {
-    if(item['Nível Territorial'] === 'Unidade da Federação') {
-      // Filtra indicadores que não começam com "CV - "
-      if (!item['Indicador']?.startsWith('CV - ')) {
-        indicadorSet.add(item['Indicador']);
-      }
-      variavelAberturaSet.add(item['Variável de abertura']);
-      categoriaSet.add(item['Categoria']);
-      variavelAbertura1Set.add(item['Variável de abertura .1']);
-      categoria1Set.add(item['Categoria .1']);
+    if(item['Nível Territorial'] === 'Unidade da Federação' && !item['Indicador']?.startsWith('CV - ')) {
+      indicadorSet.add(item['Indicador']);
+      if (item['Variável de abertura']) variavelAberturaSet.add(item['Variável de abertura']);
+      if (item['Categoria']) categoriaSet.add(item['Categoria']);
+      if (item['Variável de abertura .1']) variavelAbertura1Set.add(item['Variável de abertura .1']);
+      if (item['Categoria .1']) categoria1Set.add(item['Categoria .1']);
     }
   });
   
