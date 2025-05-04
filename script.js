@@ -7,11 +7,13 @@ const regioes = ['Centro-Oeste', 'Nordeste', 'Norte', 'Sudeste', 'Sul'];
 // Inicialização
 document.addEventListener('DOMContentLoaded', async function() {
   await carregarMapa();
-  await carregarTodosDadosRegionais(); // Carrega dados de todas as regiões
+  await carregarTodosDadosRegionais();
   adicionarListeners();
-  popularFiltros(); // Popula os filtros com todas as opções disponíveis
 
-  // Define o indicador padrão após popular os filtros
+  //Primeiro popula todos os filtros
+  popularFiltros();
+
+  //Depois define o indicador padrão
   definirIndicadorPadrao();
 });
 
@@ -85,7 +87,10 @@ async function carregarTodosDadosRegionais() {
       
       // Filtra apenas os dados de Unidade da Federação e adiciona ao array principal
       dadosEducacao = dadosEducacao.concat(
-        dadosRegiao.filter(item => item['Nível Territorial'] === 'Unidade da Federação')
+        dadosRegiao.filter(
+          item => item['Nível Territorial'] === 'Unidade da Federação' &&
+          !item['Indicador']?.startsWith('CV - ')
+        )
       );
     }
     
@@ -115,15 +120,10 @@ function definirIndicadorPadrao() {
   const opcaoPadrao = Array.from(selectIndicador.options).find(
     option => option.text.includes('Taxa de analfabetismo (%)')
   );
-  
-  if (opcaoPadrao)
-  {
+
+  if (opcaoPadrao) {
     selectIndicador.value = opcaoPadrao.value;
-    atualizarFiltros();
-  } 
-  else if (selectIndicador.options.length > 1) 
-  {
-    selectIndicador.value = selectIndicador.options[1].value;
+    // Força a atualização dos filtros secundários
     atualizarFiltros();
   }
 }
@@ -148,8 +148,8 @@ function atualizarFiltros() {
   const variavelAbertura1 = document.getElementById('variavelAbertura1').value;
   const categoria1 = document.getElementById('categoria1').value;
   
-  // Filtra os dados considerando TODOS os filtros atuais
-  const filtrado = dadosEducacao.filter(item => 
+  // Filtra os dados baseado nas seleções atuais
+  const dadosFiltrados = dadosEducacao.filter(item => 
     item['Nível Territorial'] === 'Unidade da Federação' &&
     !item['Indicador']?.startsWith('CV - ') &&
     (indicador === '' || item['Indicador'] === indicador) &&
@@ -158,67 +158,95 @@ function atualizarFiltros() {
     (variavelAbertura1 === '' || item['Variável de abertura .1'] === variavelAbertura1) &&
     (categoria1 === '' || item['Categoria .1'] === categoria1)
   );
-  
-  // Atualiza TODOS os filtros com base nos dados filtrados
-  popularFiltros(filtrado);
-  
-  // Mantém os valores selecionados nos filtros (se ainda estiverem disponíveis)
-  document.getElementById('variavelAbertura').value = variavelAbertura;
-  document.getElementById('categoria').value = categoria;
-  document.getElementById('variavelAbertura1').value = variavelAbertura1;
-  document.getElementById('categoria1').value = categoria1;
-  
+
+  // Atualiza os filtros secundários mantendo os valores válidos
+  atualizarFiltrosSecundarios(dadosFiltrados, {
+    variavelAbertura,
+    categoria,
+    variavelAbertura1,
+    categoria1
+  });
+
+  // Atualiza a visualização do mapa
   atualizarVisualizacao();
 }
 
-// Preenche os filtros com opções disponíveis
-function popularFiltros(dadosFiltrados = null) {
-  const dataToUse = dadosFiltrados || dadosEducacao;
-  
-  // Mantém os valores atuais dos filtros
-  const currentValues = {
-    variavelAbertura: document.getElementById('variavelAbertura').value,
-    categoria: document.getElementById('categoria').value,
-    variavelAbertura1: document.getElementById('variavelAbertura1').value,
-    categoria1: document.getElementById('categoria1').value
-  };
-
-  const indicadorSet = new Set();
+function atualizarFiltrosSecundarios(dadosFiltrados, currentValues) {
+  // Coletar opções disponíveis
   const variavelAberturaSet = new Set();
   const categoriaSet = new Set();
   const variavelAbertura1Set = new Set();
   const categoria1Set = new Set();
-  
-  dataToUse.forEach(item => {
-    if(item['Nível Territorial'] === 'Unidade da Federação' && !item['Indicador']?.startsWith('CV - ')) {
-      indicadorSet.add(item['Indicador']);
-      if (item['Variável de abertura']) variavelAberturaSet.add(item['Variável de abertura']);
-      if (item['Categoria']) categoriaSet.add(item['Categoria']);
-      if (item['Variável de abertura .1']) variavelAbertura1Set.add(item['Variável de abertura .1']);
-      if (item['Categoria .1']) categoria1Set.add(item['Categoria .1']);
-    }
+
+  dadosFiltrados.forEach(item => {
+    if (item['Variável de abertura']) variavelAberturaSet.add(item['Variável de abertura']);
+    if (item['Categoria']) categoriaSet.add(item['Categoria']);
+    if (item['Variável de abertura .1']) variavelAbertura1Set.add(item['Variável de abertura .1']);
+    if (item['Categoria .1']) categoria1Set.add(item['Categoria .1']);
   });
-  
-  preencherSelect('indicador', indicadorSet, document.getElementById('indicador').value);
-  preencherSelect('variavelAbertura', variavelAberturaSet, document.getElementById('variavelAbertura').value);
-  preencherSelect('categoria', categoriaSet, document.getElementById('categoria').value);
-  preencherSelect('variavelAbertura1', variavelAbertura1Set, document.getElementById('variavelAbertura1').value);
-  preencherSelect('categoria1', categoria1Set, document.getElementById('categoria1').value);
+
+  // Atualizar os selects mantendo valores válidos
+  const updateSelect = (id, options, currentValue) => {
+    const select = document.getElementById(id);
+    const currentOption = select.options[select.selectedIndex];
+    
+    // Só atualiza se o valor atual não estiver mais nas opções
+    if (currentValue && !options.has(currentValue)) {
+      select.value = '';
+    }
+    
+    // Mantém o valor atual se ainda for válido
+    const newValue = options.has(currentValue) ? currentValue : '';
+    preencherSelect(id, options, newValue);
+  };
+
+  updateSelect('variavelAbertura', variavelAberturaSet, currentValues.variavelAbertura);
+  updateSelect('categoria', categoriaSet, currentValues.categoria);
+  updateSelect('variavelAbertura1', variavelAbertura1Set, currentValues.variavelAbertura1);
+  updateSelect('categoria1', categoria1Set, currentValues.categoria1);
+}
+
+// foca nos indicadores
+function popularFiltros() {
+  // Coletar todos os indicadores únicos (exceto CV - )
+  const indicadorSet = new Set(
+    dadosEducacao
+      .map(item => item['Indicador'])
+      .filter(indicador => indicador && !indicador.startsWith('CV - '))
+  );
+
+  // Preencher o select de indicadores
+  preencherSelect('indicador', indicadorSet, '');
+
+  // Atualizar outros filtros com todos os dados
+  atualizarFiltrosSecundarios(dadosEducacao, {
+    variavelAbertura: '',
+    categoria: '',
+    variavelAbertura1: '',
+    categoria1: ''
+  });
 }
 
 // Preenche um select com opções
 function preencherSelect(id, valores, valorAtual) {
   const select = document.getElementById(id);
+  const options = Array.from(valores).filter(v => v).sort();
+  
   select.innerHTML = '<option value="">--Todos--</option>';
-  Array.from(valores).sort().forEach(valor => {
-    if (valor) { // Só adiciona se o valor não for nulo/undefined
-      const option = document.createElement('option');
-      option.value = valor;
-      option.textContent = valor;
-      select.appendChild(option);
-    }
+  
+  options.forEach(valor => {
+    const option = document.createElement('option');
+    option.value = valor;
+    option.textContent = valor;
+    select.appendChild(option);
   });
-  select.value = valorAtual;
+  
+  // Mantém o valor atual se existir nas novas opções
+  if (valorAtual && options.includes(valorAtual)) {
+    select.value = valorAtual;
+  } else {
+    select.value = '';
+  }
 }
 
 // Atualiza a visualização do mapa com base nos filtros
