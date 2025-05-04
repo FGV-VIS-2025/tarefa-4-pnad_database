@@ -1,154 +1,198 @@
 body {
-    margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
-  }
-  
-  .container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 20px;
-  }
-  
-  header {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  .subtitle {
-    font-size: 1.1em;
-    color: #666;
-  }
-  
-  .filtros-globais {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .filtros-globais h2 {
-    margin-top: 0;
-  }
-  
-  .filtro {
-    margin-bottom: 15px;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .filtro label {
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-  
-  .filtro select {
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-  }
-  
-  .reset-button {
-    margin-bottom: 20px;
-    padding: 10px 15px;
-    background-color: #007acc;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    align-self: start;
-  }
-  
-  .reset-button:hover {
-    background-color: #005fa3;
-  }
-  
-  .instructions {
-    margin-bottom: 20px;
-    background-color: #e6f2ff;
-    padding: 10px 15px;
-    border-left: 4px solid #007acc;
-    border-radius: 4px;
-  }
-  
-  .visualizacao-container {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-  
-  .mapa-wrapper {
-    flex: 1 1 60%;
-    max-width: 60%;
-    height: auto;
-    overflow: visible;
-  }
-  
-  svg {
-    width: 100%;
-    height: auto;
-  }
-  
-  #mapa {
-    width: 100%;
-    height: auto;
-  }
-  
-  .legenda {
-    margin-top: 10px;
-  }
-  
-  #color-scale {
-    height: 20px;
-    margin-top: 5px;
-  }
-  
-  /* Gráficos agrupados e padronizados */
-  #grafico-container {
-    flex: 1 1 35%;
-    max-width: 35%;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .grafico {
-    width: 100%;
-    height: 300px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .grafico svg {
-    width: 100%;
-    height: 100%;
-  }
-  
-  .grafico h4 {
-    margin-top: 0;
-    text-align: center;
-  }
-  
-  footer {
-    text-align: center;
-    margin-top: 40px;
-    font-size: 0.9em;
-    color: #999;
-  }
-  
-  /* Destaque do estado selecionado no mapa */
-  .estado-selecionado {
-    stroke: #ff6600;
-    stroke-width: 3;
-    fill-opacity: 0.8;
-  }
-  
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9f9f9;
+  color: #222;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 30px 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.subtitle {
+  font-size: 1.1em;
+  color: #6c757d;
+}
+
+.filtros-globais {
+  background-color: #ffffff;
+  padding: 25px 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.filtros-globais h2 {
+  margin-top: 0;
+  font-size: 1.3em;
+  color: #333;
+}
+
+.filtro {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.filtro label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+.filtro select {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  font-size: 1em;
+}
+
+.reset-button {
+  margin-bottom: 20px;
+  padding: 10px 18px;
+  background-color: #009688;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.reset-button:hover {
+  background-color: #00796b;
+}
+
+.instructions {
+  margin-bottom: 25px;
+  background-color: #fff9e6;
+  padding: 12px 18px;
+  border-left: 5px solid #ffc107;
+  border-radius: 6px;
+  color: #665c00;
+  font-size: 0.95em;
+}
+
+.visualizacao-container {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.mapa-wrapper {
+  flex: 1 1 60%;
+  max-width: 60%;
+  height: auto;
+  overflow: visible;
+}
+
+svg {
+  width: 100%;
+  height: auto;
+}
+
+#mapa {
+  width: 100%;
+  height: auto;
+}
+
+.legenda {
+  margin-top: 12px;
+  color: #555;
+  font-size: 0.95em;
+}
+
+#color-scale {
+  height: 20px;
+  margin-top: 6px;
+}
+
+/* Gráficos agrupados e padronizados */
+#grafico-container {
+  flex: 1 1 35%;
+  max-width: 35%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.grafico {
+  width: 100%;
+  height: 300px;
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+}
+
+.grafico svg {
+  width: 100%;
+  height: 100%;
+}
+
+.grafico h4 {
+  margin-top: 0;
+  text-align: center;
+  font-size: 1em;
+}
+
+/* Rodapé */
+footer {
+  text-align: center;
+  margin-top: 50px;
+  font-size: 0.9em;
+  color: #888;
+}
+
+/* Destaque do estado selecionado no mapa */
+.estado-selecionado {
+  stroke: #d32f2f;
+  stroke-width: 3;
+  fill-opacity: 0.85;
+}
+
+/* Cores para os gráficos */
+.bar-masculino {
+  fill: #4f81bd;
+}
+
+.bar-feminino {
+  fill: #c0504d;
+}
+
+.bar-branca {
+  fill: #9bbb59;
+}
+
+.bar-preta-parda {
+  fill: #f79646;
+}
+
+/* Eixos e textos */
+.axis path,
+.axis line,
+.axis text {
+  stroke: #444;
+  fill: #444;
+}
+
+.chart-title,
+.axis-label {
+  fill: #333;
+  font-weight: 600;
+}

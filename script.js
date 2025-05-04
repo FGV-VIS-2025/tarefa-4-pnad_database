@@ -334,146 +334,157 @@ function criarGraficos(estadoSelecionado) {
 }
 
 function criarGraficoGenero(dados, indicador) {
-  const container = d3.select('#grafico-genero');
-  container.selectAll('*').remove();
-
-  const width = 300;
-  const height = 220;
-  const margin = {top: 40, right: 20, bottom: 50, left: 50};
-
-  const svg = container.append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-    .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
-
-  // Escalas
-  const x = d3.scaleBand()
-    .domain(dados.map(d => d.genero))
-    .range([0, width])
-    .padding(0.4);
-
-  const y = d3.scaleLinear()
-    .domain([0, d3.max(dados, d => d.valor)])
-    .nice()
-    .range([height, 0]);
-
-  // Eixo X
-  svg.append('g')
-    .attr('class', 'axis axis-x')
-    .attr('transform', `translate(0,${height})`)
-    .call(d3.axisBottom(x).tickSizeOuter(0));
-
-  // Eixo Y
-  svg.append('g')
-    .attr('class', 'axis axis-y')
-    .call(d3.axisLeft(y).tickSizeOuter(0));
-
-  // Barras
-  svg.selectAll('.bar')
-    .data(dados)
-    .enter().append('rect')
-    .attr('class', d => d.genero === 'Homem' ? 'bar-masculino' : 'bar-feminino')
-    .attr('x', d => x(d.genero))
-    .attr('y', d => y(d.valor))
-    .attr('width', x.bandwidth())
-    .attr('height', d => height - y(d.valor))
-    .attr('rx', 3) // Bordas arredondadas
-    .attr('ry', 3);
-
-  // Rótulo eixo Y
-  svg.append('text')
-    .attr('class', 'axis-label')
-    .attr('transform', 'rotate(-90)')
-    .attr('y', -margin.left + 15)
-    .attr('x', -height / 2)
-    .text('Valor');
-
-  // Rótulo eixo X
-  svg.append('text')
-    .attr('class', 'axis-label')
-    .attr('x', width / 2)
-    .attr('y', height + margin.bottom - 10)
-    .text('Sexo');
-
-  // Título
-  svg.append('text')
-    .attr('class', 'chart-title')
-    .attr('x', width / 3)
-    .attr('y', -margin.top / 2)
-    .text('Distribuição por Gênero');
-}
-
-function criarGraficoRaca(dados, indicador) {
-  const container = d3.select('#grafico-raca');
-  container.selectAll('*').remove();
-
-  const width = 300;
-  const height = 220;
-  const margin = {top: 40, right: 20, bottom: 50, left: 50};
-
-  const svg = container.append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-    .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
-
-  // Escalas
-  const x = d3.scaleBand()
-    .domain(dados.map(d => d.raca))
-    .range([0, width])
-    .padding(0.4);
-
-  const y = d3.scaleLinear()
-    .domain([0, d3.max(dados, d => d.valor)])
-    .nice()
-    .range([height, 0]);
-
-  // Eixo X
-  svg.append('g')
-    .attr('class', 'axis axis-x')
-    .attr('transform', `translate(0,${height})`)
-    .call(d3.axisBottom(x).tickSizeOuter(0));
-
-  // Eixo Y
-  svg.append('g')
-    .attr('class', 'axis axis-y')
-    .call(d3.axisLeft(y).tickSizeOuter(0));
-
-  // Barras
-  svg.selectAll('.bar')
-    .data(dados)
-    .enter().append('rect')
-    .attr('class', d => d.raca === 'Branca' ? 'bar-branca' : 'bar-preta-parda')
-    .attr('x', d => x(d.raca))
-    .attr('y', d => y(d.valor))
-    .attr('width', x.bandwidth())
-    .attr('height', d => height - y(d.valor))
-    .attr('rx', 3)
-    .attr('ry', 3);
-
-  // Rótulo eixo Y
-  svg.append('text')
-    .attr('class', 'axis-label')
-    .attr('transform', 'rotate(-90)')
-    .attr('y', -margin.left + 15)
-    .attr('x', -height / 2)
-    .text('Valor');
-
-  // Rótulo eixo X
-  svg.append('text')
-    .attr('class', 'axis-label')
-    .attr('x', width / 2)
-    .attr('y', height + margin.bottom - 10)
-    .text('Cor ou Raça');
-
-  // Título
-  svg.append('text')
-    .attr('class', 'chart-title')
-    .attr('x', width / 3)
-    .attr('y', -margin.top / 2)
-    .text('Distribuição por Raça');
-}
+    const container = d3.select('#grafico-genero');
+    container.selectAll('*').remove();
+  
+    const width = 300;
+    const height = 220;
+    const margin = { top: 60, right: 20, bottom: 50, left: 50 };
+  
+    const svg = container.append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom);
+  
+    // Título (fora do grupo 'g')
+    svg.append('text')
+      .attr('x', (width + margin.left + margin.right) / 2)
+      .attr('y', 20)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '14px')
+      .style('font-weight', 'bold')
+      .text(`Distribuição de Gênero`);
+  
+    // Subtítulo (fora do grupo 'g')
+    svg.append('text')
+      .attr('x', (width + margin.left + margin.right) / 2)
+      .attr('y', 40)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '12px')
+      .style('fill', '#666')
+      .text(`Relativo a ${indicador}`);
+  
+    // Grupo principal
+    const g = svg.append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+  
+    const x = d3.scaleBand()
+      .domain(dados.map(d => d.genero))
+      .range([0, width])
+      .padding(0.6);
+  
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(dados, d => d.valor)]).nice()
+      .range([height, 0]);
+  
+    g.append('g')
+      .attr('transform', `translate(0,${height})`)
+      .call(d3.axisBottom(x).tickSizeOuter(0));
+  
+    g.append('g')
+      .call(d3.axisLeft(y).tickSizeOuter(0));
+  
+    g.selectAll('.bar')
+      .data(dados)
+      .enter().append('rect')
+      .attr('class', d => d.genero === 'Homem' ? 'bar-masculino' : 'bar-feminino')
+      .attr('x', d => x(d.genero))
+      .attr('y', d => y(d.valor))
+      .attr('width', x.bandwidth())
+      .attr('height', d => height - y(d.valor))
+      .attr('rx', 3)
+      .attr('ry', 3);
+  
+    g.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', -margin.left + 15)
+      .attr('x', -height / 2)
+      .attr('text-anchor', 'middle')
+      .text('Valor');
+  
+    g.append('text')
+      .attr('x', width / 2)
+      .attr('y', height + margin.bottom - 10)
+      .attr('text-anchor', 'middle')
+      .text('Sexo');
+  }
+  
+  
+  function criarGraficoRaca(dados, indicador) {
+    const container = d3.select('#grafico-raca');
+    container.selectAll('*').remove();
+  
+    const width = 300;
+    const height = 220;
+    const margin = { top: 60, right: 20, bottom: 50, left: 50 };
+  
+    const svg = container.append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom);
+  
+    // Título
+    svg.append('text')
+      .attr('x', (width + margin.left + margin.right) / 2)
+      .attr('y', 20)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '14px')
+      .style('font-weight', 'bold')
+      .text(`Distribuição de Raça`);
+  
+    // Subtítulo
+    svg.append('text')
+      .attr('x', (width + margin.left + margin.right) / 2)
+      .attr('y', 40)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '12px')
+      .style('fill', '#666')
+      .text(`Relativo a ${indicador}`);
+  
+    // Grupo principal
+    const g = svg.append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+  
+    const x = d3.scaleBand()
+      .domain(dados.map(d => d.raca))
+      .range([0, width])
+      .padding(0.6);
+  
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(dados, d => d.valor)]).nice()
+      .range([height, 0]);
+  
+    g.append('g')
+      .attr('transform', `translate(0,${height})`)
+      .call(d3.axisBottom(x).tickSizeOuter(0));
+  
+    g.append('g')
+      .call(d3.axisLeft(y).tickSizeOuter(0));
+  
+    g.selectAll('.bar')
+      .data(dados)
+      .enter().append('rect')
+      .attr('class', d => d.raca === 'Branca' ? 'bar-branca' : 'bar-preta-parda')
+      .attr('x', d => x(d.raca))
+      .attr('y', d => y(d.valor))
+      .attr('width', x.bandwidth())
+      .attr('height', d => height - y(d.valor))
+      .attr('rx', 3)
+      .attr('ry', 3);
+  
+    g.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', -margin.left + 15)
+      .attr('x', -height / 2)
+      .attr('text-anchor', 'middle')
+      .text('Valor');
+  
+    g.append('text')
+      .attr('x', width / 2)
+      .attr('y', height + margin.bottom - 10)
+      .attr('text-anchor', 'middle')
+      .text('Cor ou Raça');
+  }
+  
+  
 
 // Atualiza a visualização do mapa com base nos filtros
 function atualizarVisualizacao() {

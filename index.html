@@ -6,12 +6,34 @@
   <title>Mapa Interativo da Educação no Brasil</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .legend-bar {
+      width: 100%;
+      height: 20px;
+      background: linear-gradient(to right, #add8e6, #1e3a8a);
+      margin-top: 10px;
+    }
+    .legend-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Panorama da Educação no Brasil</h1>
-      <p class="subtitle">Dados da PNAD de 2018</p>
+      <h1>PANORAMA DA EDUCAÇÃO BRASILEIRA DO ANO DE 2018</h1>
+      <p class="subtitle">Uma análise interativa dos dados educacionais da PNAD feita pelo IBGE</p>
+      <div class="explicacao">
+        <p>
+          A visualização interativa abaixo possibilita ao usuário explorar o panorama educacional brasileiro de forma abrangente. É possível analisar diversos indicadores relacionados à educação em diferentes grupos populacionais, com filtros por idade, sexo e raça.
+        </p>
+        <p>
+          Os dados abrangem todos os estados do Brasil do ano de 2018. Basta selecionar o indicador desejado (como taxa de analfabetismo ou escolarização) e aplicar filtros populacionais como sexo, raça ou nível educacional. A ferramenta permite uma análise detalhada, oferecendo uma visão clara das desigualdades educacionais no país.
+        </p>
+      </div>
     </header>
 
     <main>
@@ -23,7 +45,6 @@
           <label for="indicador">Indicador:</label>
           <select id="indicador">
             <option value="">--Todos--</option>
-            <!-- Options will be populated by script.js -->
           </select>
         </div>
 
@@ -31,7 +52,6 @@
           <label for="variavelAbertura">Variável de Abertura:</label>
           <select id="variavelAbertura">
             <option value="">--Todos--</option>
-            <!-- Options will be populated by script.js -->
           </select>
         </div>
 
@@ -39,7 +59,6 @@
           <label for="categoria">Categoria:</label>
           <select id="categoria">
             <option value="">--Todos--</option>
-            <!-- Options will be populated by script.js -->
           </select>
         </div>
 
@@ -47,7 +66,6 @@
           <label for="variavelAbertura1">Variável de Abertura 2:</label>
           <select id="variavelAbertura1">
             <option value="">--Todos--</option>
-            <!-- Options will be populated by script.js -->
           </select>
         </div>
 
@@ -55,15 +73,13 @@
           <label for="categoria1">Categoria 2:</label>
           <select id="categoria1">
             <option value="">--Todos--</option>
-            <!-- Options will be populated by script.js -->
           </select>
         </div>
       </div>
 
       <div class="instructions">
-        <p>Selecione os filtros desejados acima para visualizar os dados no mapa.</p>
-        <p>Clique nos estados para visulizar os dados por sexo e raça do indicador
-          selecionado no estado que clicar.</p>
+        <p>Use os filtros acima para explorar os dados no mapa.</p>
+        <p>Clique em um estado para ver os dados segmentados por sexo e raça para o indicador selecionado.</p>
       </div>
 
       <div class="visualizacao-container">
@@ -75,12 +91,35 @@
           <div id="grafico-genero" class="grafico"></div>
           <div id="grafico-raca" class="grafico"></div>
         </div>
-        
       </div>
-      
+
       <div class="legenda">
         <h3>Legenda:</h3>
         <div id="color-scale"></div>
+        <div class="legend-bar"></div>
+        <div class="legend-text">
+          <span>Valor Baixo</span>
+          <span>Valor Alto</span>
+        </div>
+      </div>
+
+      <div class="explicacao-legenda">
+        <p>
+          A escala de cores representa a intensidade dos valores de cada indicador educacional. Tons mais escuros indicam valores mais elevados, e os mais claros representam valores mais baixos. Isso permite identificar padrões e desigualdades de forma intuitiva.
+        </p>
+      </div>
+
+      <!-- Parte analítica após mapa -->
+      <div class="explicacao" style="margin-top: 30px;">
+        <p>
+          Os principais estudos focaram nas taxas de analfabetismo e escolarização, com recortes por raça e sexo. Os resultados revelam desigualdades marcantes. Por exemplo, a taxa de escolarização é geralmente mais alta entre mulheres e pessoas brancas, enquanto a taxa de analfabetismo é mais acentuada entre homens e pessoas pretas ou pardas.
+        </p>
+        <p>
+          Os dados da PNAD (2016–2018) apontam o Nordeste como a região com os maiores índices de analfabetismo — destaque para a Paraíba, com cerca de 19% entre homens e 18% entre pretos ou pardos. Já o Distrito Federal e o Amapá apresentam as maiores taxas de escolarização entre a população de 18 a 24 anos, embora ainda evidenciem grande disparidade racial.
+        </p>
+        <p>
+          Questões como “por que a população negra ainda enfrenta tamanha desigualdade educacional mesmo com políticas de cotas?” ou “por que mulheres são minoria em cargos de liderança, mesmo com melhor escolarização?” podem ser investigadas com esta ferramenta. Explore os dados e descubra mais.
+        </p>
       </div>
     </main>
 
