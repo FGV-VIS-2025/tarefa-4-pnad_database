@@ -1,12 +1,18 @@
 // Variáveis globais
 let mapaGeoJSON;
-let dadosEducacao = {};
+let dadosEducacao = [];
 let estadosSelecionados = new Map();
+const regioes = ['Centro-Oeste', 'Nordeste', 'Norte', 'Sudeste', 'Sul'];
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', async function() {
   await carregarMapa();
+  await carregarTodosDadosRegionais(); // Carrega dados de todas as regiões
   adicionarListeners();
+  popularFiltros(); // Popula os filtros com todas as opções disponíveis
+
+  // Define o indicador padrão após popular os filtros
+  definirIndicadorPadrao();
 });
 
 // Carrega o mapa do Brasil
@@ -58,18 +64,44 @@ async function carregarMapa() {
   }
 }
 
+// Carrega dados de todas as regiões
+async function carregarTodosDadosRegionais() {
+  try {
+    // Carrega dados de todas as regiões
+    for (const regiao of regioes) {
+      const response = await fetch(`data/Brasil_e_${regiao}.csv`);
+      if (!response.ok) throw new Error(`Erro ao carregar dados da região ${regiao}`);
+      
+      const text = await response.text();
+      const linhas = text.split('\n').filter(l => l.trim() !== '');
+      const headers = linhas[0].split(',');
+      
+      const dadosRegiao = linhas.slice(1).map(linha => {
+        const valores = linha.split(',');
+        const obj = {};
+        headers.forEach((h, i) => obj[h.trim()] = valores[i]?.trim());
+        return obj;
+      });
+      
+      // Filtra apenas os dados de Unidade da Federação e adiciona ao array principal
+      dadosEducacao = dadosEducacao.concat(
+        dadosRegiao.filter(item => item['Nível Territorial'] === 'Unidade da Federação')
+      );
+    }
+    
+    console.log("Todos os dados regionais carregados:", dadosEducacao);
+    
+  } catch (error) {
+    console.error("Erro ao carregar dados regionais:", error);
+  }
+}
+
 // Adiciona listeners para os filtros
 function adicionarListeners() {
-  document.getElementById('regiao').addEventListener('change', async function() {
-    const regiao = this.value;
-    if (regiao) {
-      await carregarDadosRegionais(regiao);
-      popularFiltros();
-    } else {
-      resetarMapa();
-    }
-  });
+  // Listener para o botão de reset
+  document.getElementById('resetButton').addEventListener('click', resetarParaPadrao);
 
+  // Listeners para os filtros
   document.getElementById('indicador').addEventListener('change', atualizarFiltros);
   document.getElementById('variavelAbertura').addEventListener('change', atualizarFiltros);
   document.getElementById('categoria').addEventListener('change', atualizarFiltros);
@@ -77,46 +109,45 @@ function adicionarListeners() {
   document.getElementById('categoria1').addEventListener('change', atualizarFiltros);
 }
 
-// Carrega dados da região selecionada
-async function carregarDadosRegionais(regiao) {
-  try {
-    const response = await fetch(`data/Brasil_e_${regiao}.csv`);
-    if (!response.ok) throw new Error("Erro ao carregar dados");
-    
-    const text = await response.text();
-    const linhas = text.split('\n').filter(l => l.trim() !== '');
-    const headers = linhas[0].split(',');
-    
-    dadosEducacao[regiao] = linhas.slice(1).map(linha => {
-      const valores = linha.split(',');
-      const obj = {};
-      headers.forEach((h, i) => obj[h.trim()] = valores[i]?.trim());
-      return obj;
-    });
-    
-    console.log(`Dados de ${regiao} carregados:`, dadosEducacao[regiao]);
-    
-  } catch (error) {
-    console.error("Erro ao carregar dados:", error);
+// Define o indicador padrão
+function definirIndicadorPadrao() {
+  const selectIndicador = document.getElementById('indicador');
+  const opcaoPadrao = Array.from(selectIndicador.options).find(
+    option => option.text.includes('Taxa de analfabetismo (%)')
+  );
+  
+  if (opcaoPadrao) {
+    selectIndicador.value = opcaoPadrao.value;
+    atualizarVisualizacao();
   }
+}
+
+// Reseta para o estado padrão (Taxa de analfabetismo)
+function resetarParaPadrao() {
+  // Reseta todos os filtros exceto o indicador
+  document.getElementById('variavelAbertura').value = '';
+  document.getElementById('categoria').value = '';
+  document.getElementById('variavelAbertura1').value = '';
+  document.getElementById('categoria1').value = '';
+  
+  // Define o indicador padrão
+  definirIndicadorPadrao();
 }
 
 // Atualiza os filtros disponíveis
 function atualizarFiltros() {
-  const regiao = document.getElementById('regiao').value;
-  if (!regiao || !dadosEducacao[regiao]) return;
-  
   const indicador = document.getElementById('indicador').value;
   const variavelAbertura = document.getElementById('variavelAbertura').value;
   const categoria = document.getElementById('categoria').value;
   const variavelAbertura1 = document.getElementById('variavelAbertura1').value;
+  const categoria1 = document.getElementById('categoria1').value;
   
-  const filtrado = dadosEducacao[regiao].filter(item => 
-    item['Nível Territorial'] === 'Unidade da Federação' &&
+  const filtrado = dadosEducacao.filter(item => 
     (indicador === '' || item['Indicador'] === indicador) &&
     (variavelAbertura === '' || item['Variável de abertura'] === variavelAbertura) &&
     (categoria === '' || item['Categoria'] === categoria) &&
-    (variavelAbertura1 === '' || item['Variável de abertura .1'] === variavelAbertura1)
+    (variavelAbertura1 === '' || item['Variável de abertura .1'] === variavelAbertura1) &&
+    (categoria1 === '' || item['Categoria .1'] === categoria1)
   );
   
   popularFiltros(filtrado);
@@ -125,10 +156,7 @@ function atualizarFiltros() {
 
 // Preenche os filtros com opções disponíveis
 function popularFiltros(dadosFiltrados = null) {
-  const regiao = document.getElementById('regiao').value;
-  if (!regiao || !dadosEducacao[regiao]) return;
-  
-  const dataToUse = dadosFiltrados || dadosEducacao[regiao];
+  const dataToUse = dadosFiltrados || dadosEducacao;
   
   const indicadorSet = new Set();
   const variavelAberturaSet = new Set();
@@ -137,13 +165,11 @@ function popularFiltros(dadosFiltrados = null) {
   const categoria1Set = new Set();
   
   dataToUse.forEach(item => {
-    if(item['Nível Territorial'] === 'Unidade da Federação') {
-      indicadorSet.add(item['Indicador']);
-      variavelAberturaSet.add(item['Variável de abertura']);
-      categoriaSet.add(item['Categoria']);
-      variavelAbertura1Set.add(item['Variável de abertura .1']);
-      categoria1Set.add(item['Categoria .1']);
-    }
+    indicadorSet.add(item['Indicador']);
+    variavelAberturaSet.add(item['Variável de abertura']);
+    categoriaSet.add(item['Categoria']);
+    variavelAbertura1Set.add(item['Variável de abertura .1']);
+    categoria1Set.add(item['Categoria .1']);
   });
   
   preencherSelect('indicador', indicadorSet, document.getElementById('indicador').value);
@@ -157,7 +183,7 @@ function popularFiltros(dadosFiltrados = null) {
 function preencherSelect(id, valores, valorAtual) {
   const select = document.getElementById(id);
   select.innerHTML = '<option value="">--Todos--</option>';
-  valores.forEach(valor => {
+  Array.from(valores).sort().forEach(valor => {
     if (valor) { // Só adiciona se o valor não for nulo/undefined
       const option = document.createElement('option');
       option.value = valor;
@@ -170,19 +196,18 @@ function preencherSelect(id, valores, valorAtual) {
 
 // Atualiza a visualização do mapa com base nos filtros
 function atualizarVisualizacao() {
-  const regiao = document.getElementById('regiao').value;
-  if (!regiao || !dadosEducacao[regiao]) {
-    resetarMapa();
+  // Se nenhum indicador selecionado, usa o padrão
+  if (document.getElementById('indicador').value === '') {
+    definirIndicadorPadrao();
     return;
   }
-  
   const indicador = document.getElementById('indicador').value;
   const variavelAbertura = document.getElementById('variavelAbertura').value;
   const categoria = document.getElementById('categoria').value;
   const variavelAbertura1 = document.getElementById('variavelAbertura1').value;
   const categoria1 = document.getElementById('categoria1').value;
   
-  const dadosFiltrados = filtrarDados(regiao, indicador, variavelAbertura, categoria, variavelAbertura1, categoria1);
+  const dadosFiltrados = filtrarDados(indicador, variavelAbertura, categoria, variavelAbertura1, categoria1);
   
   // Atualiza as cores do mapa
   atualizarCoresMapa(dadosFiltrados);
@@ -195,14 +220,11 @@ function atualizarVisualizacao() {
 }
 
 // Filtra os dados com base nos critérios selecionados
-function filtrarDados(regiao, indicador, variavelAbertura, categoria, variavelAbertura1, categoria1) {
+function filtrarDados(indicador, variavelAbertura, categoria, variavelAbertura1, categoria1) {
   const resultados = {};
   
-  if (!dadosEducacao[regiao]) return resultados;
-  
-  dadosEducacao[regiao].forEach(item => {
-    if (item['Nível Territorial'] === 'Unidade da Federação' &&
-        (indicador === '' || item['Indicador'] === indicador) &&
+  dadosEducacao.forEach(item => {
+    if ((indicador === '' || item['Indicador'] === indicador) &&
         (variavelAbertura === '' || item['Variável de abertura'] === variavelAbertura) &&
         (categoria === '' || item['Categoria'] === categoria) &&
         (variavelAbertura1 === '' || item['Variável de abertura .1'] === variavelAbertura1) &&
@@ -251,7 +273,6 @@ function resetarMapa() {
 
 // Reseta todos os filtros
 function resetarFiltros() {
-  document.getElementById('regiao').value = '';
   document.getElementById('indicador').value = '';
   document.getElementById('variavelAbertura').value = '';
   document.getElementById('categoria').value = '';

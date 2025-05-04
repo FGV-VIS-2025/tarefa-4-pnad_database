@@ -100,6 +100,7 @@ footer {
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
+    position: relative;
 }
   
 .filtro {
@@ -117,4 +118,26 @@ footer {
     min-width: 200px;
     border-radius: 4px;
     border: 1px solid #ddd;
+}
+
+.reset-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.reset-button:hover {
+    background-color: #d32f2f;
+}
+
+.reset-button {
+    position: absolute;
+    right: 0;
+    top: 0;
 }
