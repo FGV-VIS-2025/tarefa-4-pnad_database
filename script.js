@@ -165,11 +165,16 @@ function popularFiltros(dadosFiltrados = null) {
   const categoria1Set = new Set();
   
   dataToUse.forEach(item => {
-    indicadorSet.add(item['Indicador']);
-    variavelAberturaSet.add(item['Variável de abertura']);
-    categoriaSet.add(item['Categoria']);
-    variavelAbertura1Set.add(item['Variável de abertura .1']);
-    categoria1Set.add(item['Categoria .1']);
+    if(item['Nível Territorial'] === 'Unidade da Federação') {
+      // Filtra indicadores que não começam com "CV - "
+      if (!item['Indicador']?.startsWith('CV - ')) {
+        indicadorSet.add(item['Indicador']);
+      }
+      variavelAberturaSet.add(item['Variável de abertura']);
+      categoriaSet.add(item['Categoria']);
+      variavelAbertura1Set.add(item['Variável de abertura .1']);
+      categoria1Set.add(item['Categoria .1']);
+    }
   });
   
   preencherSelect('indicador', indicadorSet, document.getElementById('indicador').value);
@@ -224,14 +229,15 @@ function filtrarDados(indicador, variavelAbertura, categoria, variavelAbertura1,
   const resultados = {};
   
   dadosEducacao.forEach(item => {
-    if ((indicador === '' || item['Indicador'] === indicador) &&
+    // Adiciona verificação para excluir indicadores com "CV - "
+    if (!item['Indicador']?.startsWith('CV - ') &&
+        (indicador === '' || item['Indicador'] === indicador) &&
         (variavelAbertura === '' || item['Variável de abertura'] === variavelAbertura) &&
         (categoria === '' || item['Categoria'] === categoria) &&
         (variavelAbertura1 === '' || item['Variável de abertura .1'] === variavelAbertura1) &&
         (categoria1 === '' || item['Categoria .1'] === categoria1)) {
       
       const estado = item['Abertura Territorial'];
-      // Usa o valor de 2018 como padrão
       resultados[estado] = parseFloat(item['2018']) || 0;
     }
   });
