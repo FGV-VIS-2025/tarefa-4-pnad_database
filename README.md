@@ -1,4 +1,4 @@
-# Panorama da Educação Brasileira - Dados da PNAD de 2018
+# Panorama da Educação Brasileira - Dados de 2018
 
 ### Base de dados
 
