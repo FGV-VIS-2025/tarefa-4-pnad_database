@@ -3,6 +3,24 @@ let mapaGeoJSON;
 let dadosEducacao = [];
 let estadosSelecionados = new Map();
 const regioes = ['Centro-Oeste', 'Nordeste', 'Norte', 'Sudeste', 'Sul'];
+// Lista de indicadores a serem excluídos
+const INDICADORES_BLOQUEADOS = [
+  "População (mil pessoas)",
+  "Distribuição da população (%)",
+  "Pessoas de 14 anos ou mais de idade (mil pessoas)",
+  "Distribuição das pessoas de 14 anos ou mais de idade (%)",
+  "Pessoas de 25 anos ou mais de idade (mil pessoas)",
+  "Distribuição das pessoas de 25 anos ou mais de idade (%)",
+  "Pessoas de 15 a 29 anos (mil pessoas)",
+  "Distribuição das pessoas de 15 a 29 anos (%)"
+];
+
+// Função auxiliar para verificar indicadores permitidos
+function isIndicadorPermitido(indicador) {
+  return indicador && 
+         !indicador.startsWith('CV - ') && 
+         !INDICADORES_BLOQUEADOS.includes(indicador);
+}
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', async function() {
@@ -69,10 +87,11 @@ async function carregarMapa() {
 // Carrega dados de todas as regiões
 async function carregarTodosDadosRegionais() {
   try {
-    // Carrega dados de todas as regiões
+    dadosEducacao = []; // Resetar os dados
+    
     for (const regiao of regioes) {
       const response = await fetch(`data/Brasil_e_${regiao}.csv`);
-      if (!response.ok) throw new Error(`Erro ao carregar dados da região ${regiao}`);
+      if (!response.ok) continue;
       
       const text = await response.text();
       const linhas = text.split('\n').filter(l => l.trim() !== '');
@@ -85,19 +104,17 @@ async function carregarTodosDadosRegionais() {
         return obj;
       });
       
-      // Filtra apenas os dados de Unidade da Federação e adiciona ao array principal
+      // Filtra combinando as condições
       dadosEducacao = dadosEducacao.concat(
-        dadosRegiao.filter(
-          item => item['Nível Territorial'] === 'Unidade da Federação' &&
-          !item['Indicador']?.startsWith('CV - ')
-        )
+        dadosRegiao.filter(item => 
+          item['Nível Territorial'] === 'Unidade da Federação' &&
+          isIndicadorPermitido(item['Indicador']))
       );
     }
     
-    console.log("Todos os dados regionais carregados:", dadosEducacao);
-    
+    console.log("Dados carregados com filtros aplicados:", dadosEducacao);
   } catch (error) {
-    console.error("Erro ao carregar dados regionais:", error);
+    console.error("Erro ao carregar dados:", error);
   }
 }
 
@@ -208,23 +225,41 @@ function atualizarFiltrosSecundarios(dadosFiltrados, currentValues) {
 
 // foca nos indicadores
 function popularFiltros() {
-  // Coletar todos os indicadores únicos (exceto CV - )
+  // Coletar todos os indicadores permitidos
   const indicadorSet = new Set(
     dadosEducacao
       .map(item => item['Indicador'])
-      .filter(indicador => indicador && !indicador.startsWith('CV - '))
+      .filter(indicador => isIndicadorPermitido(indicador))
   );
 
   // Preencher o select de indicadores
-  preencherSelect('indicador', indicadorSet, '');
+  preencherSelect('indicador', indicadorSet, document.getElementById('indicador').value);
 
-  // Atualizar outros filtros com todos os dados
-  atualizarFiltrosSecundarios(dadosEducacao, {
-    variavelAbertura: '',
-    categoria: '',
-    variavelAbertura1: '',
-    categoria1: ''
+  // Atualizar outros filtros
+  const currentValues = {
+    variavelAbertura: document.getElementById('variavelAbertura').value,
+    categoria: document.getElementById('categoria').value,
+    variavelAbertura1: document.getElementById('variavelAbertura1').value,
+    categoria1: document.getElementById('categoria1').value
+  };
+
+  // Coletar opções para outros filtros
+  const variavelAberturaSet = new Set();
+  const categoriaSet = new Set();
+  const variavelAbertura1Set = new Set();
+  const categoria1Set = new Set();
+  
+  dadosEducacao.forEach(item => {
+    if (item['Variável de abertura']) variavelAberturaSet.add(item['Variável de abertura']);
+    if (item['Categoria']) categoriaSet.add(item['Categoria']);
+    if (item['Variável de abertura .1']) variavelAbertura1Set.add(item['Variável de abertura .1']);
+    if (item['Categoria .1']) categoria1Set.add(item['Categoria .1']);
   });
+
+  preencherSelect('variavelAbertura', variavelAberturaSet, currentValues.variavelAbertura);
+  preencherSelect('categoria', categoriaSet, currentValues.categoria);
+  preencherSelect('variavelAbertura1', variavelAbertura1Set, currentValues.variavelAbertura1);
+  preencherSelect('categoria1', categoria1Set, currentValues.categoria1);
 }
 
 // Preenche um select com opções
@@ -279,8 +314,7 @@ function filtrarDados(indicador, variavelAbertura, categoria, variavelAbertura1,
   const resultados = {};
   
   dadosEducacao.forEach(item => {
-    // Adiciona verificação para excluir indicadores com "CV - "
-    if (!item['Indicador']?.startsWith('CV - ') &&
+    if (isIndicadorPermitido(item['Indicador']) &&
         (indicador === '' || item['Indicador'] === indicador) &&
         (variavelAbertura === '' || item['Variável de abertura'] === variavelAbertura) &&
         (categoria === '' || item['Categoria'] === categoria) &&
@@ -294,7 +328,6 @@ function filtrarDados(indicador, variavelAbertura, categoria, variavelAbertura1,
   
   return resultados;
 }
-
 // Atualiza as cores do mapa com base nos dados filtrados
 function atualizarCoresMapa(dados) {
   // Se não há dados, reseta as cores
