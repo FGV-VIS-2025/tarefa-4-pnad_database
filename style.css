@@ -1,143 +1,154 @@
 body {
-    font-family: Arial, sans-serif;
-    padding: 20px;
-    background: #f5f5f5;
-}
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+  }
   
-h1 {
+  .container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+  }
+  
+  header {
     text-align: center;
-    color: #003366;
-}
-  
-#mapa {
-    width: 900px;
-    height: 600px;
-    background-color: #f5f5f5;
-}
-  
-.estado.ativo {
-    fill: #2b83ba;
-}
-
-.estado.selecionado {
-    stroke: #333;
-    stroke-width: 2px;
-}
-  
-#painel-filtros {
-    margin: 30px 0;
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  }
-
-.tooltip {
-    position: absolute;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    border-radius: 4px;
-    pointer-events: none;
-    font-size: 12px;
-}
-  
-.filtros-estado {
-    background: #f8f9fa;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-    border-left: 4px solid #2b83ba;
-}
-
-.container {
-    display: flex;
-    flex-wrap: wrap;
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
+    margin-bottom: 20px;
   }
   
-.subtitle {
-    color: #555;
+  .subtitle {
     font-size: 1.1em;
-}
-  
-.instructions {
-    background: #f0f8ff;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    border-left: 4px solid #2b83ba;
-}
-  
-#grafico-comparativo {
-    margin: 40px 0;
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-  
-#grafico-comparativo h2 {
-    margin-top: 0;
-    color: #003366;
-}
-  
-footer {
-    text-align: center;
-    margin-top: 40px;
-    padding: 20px;
     color: #666;
-    font-size: 0.9em;
-}
+  }
   
-.filtros-globais {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 5px;
+  .filtros-globais {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
     margin-bottom: 20px;
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    position: relative;
-}
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
   
-.filtro {
+  .filtros-globais h2 {
+    margin-top: 0;
+  }
+  
+  .filtro {
     margin-bottom: 15px;
-}
+    display: flex;
+    flex-direction: column;
+  }
   
-.filtro label {
-    display: inline-block;
-    width: 150px;
+  .filtro label {
     font-weight: bold;
-}
+    margin-bottom: 5px;
+  }
   
-.filtro select {
+  .filtro select {
     padding: 8px;
-    min-width: 200px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-}
-
-.reset-button {
-    background-color: #f44336;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  
+  .reset-button {
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    background-color: #007acc;
     color: white;
     border: none;
-    padding: 8px 16px;
-    margin-bottom: 15px;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s;
-}
-
-.reset-button:hover {
-    background-color: #d32f2f;
-}
-
-.reset-button {
-    position: absolute;
-    right: 0;
-    top: 0;
-}
+    align-self: start;
+  }
+  
+  .reset-button:hover {
+    background-color: #005fa3;
+  }
+  
+  .instructions {
+    margin-bottom: 20px;
+    background-color: #e6f2ff;
+    padding: 10px 15px;
+    border-left: 4px solid #007acc;
+    border-radius: 4px;
+  }
+  
+  .visualizacao-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  
+  .mapa-wrapper {
+    flex: 1 1 60%;
+    max-width: 60%;
+    height: auto;
+    overflow: visible;
+  }
+  
+  svg {
+    width: 100%;
+    height: auto;
+  }
+  
+  #mapa {
+    width: 100%;
+    height: auto;
+  }
+  
+  .legenda {
+    margin-top: 10px;
+  }
+  
+  #color-scale {
+    height: 20px;
+    margin-top: 5px;
+  }
+  
+  /* Gráficos agrupados e padronizados */
+  #grafico-container {
+    flex: 1 1 35%;
+    max-width: 35%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .grafico {
+    width: 100%;
+    height: 300px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .grafico svg {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .grafico h4 {
+    margin-top: 0;
+    text-align: center;
+  }
+  
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 0.9em;
+    color: #999;
+  }
+  
+  /* Destaque do estado selecionado no mapa */
+  .estado-selecionado {
+    stroke: #ff6600;
+    stroke-width: 3;
+    fill-opacity: 0.8;
+  }
+  

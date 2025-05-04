@@ -2,6 +2,9 @@
 let mapaGeoJSON;
 let dadosEducacao = [];
 let estadosSelecionados = new Map();
+const svgWidth = 280;
+const svgHeight = 150;
+const margin = {top: 20, right: 20, bottom: 30, left: 40};
 const regioes = ['Centro-Oeste', 'Nordeste', 'Norte', 'Sudeste', 'Sul'];
 // Lista de indicadores a serem excluídos
 const INDICADORES_BLOQUEADOS = [
@@ -38,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 // Carrega o mapa do Brasil
 async function carregarMapa() {
   try {
-    const width = 900;
+    const width = 700;
     const height = 600;
     
     const svg = d3.select("#mapa")
@@ -67,15 +70,26 @@ async function carregarMapa() {
       .attr("stroke-width", 1)
       .on("click", function(event, d) {
         const estado = d.properties.name;
+      
+        // Desmarcar todos os estados visualmente
+        d3.selectAll("path").classed("estado-selecionado", false);
+      
+        // Verifica se o estado já está selecionado
         if (estadosSelecionados.has(estado)) {
           estadosSelecionados.delete(estado);
           d3.select(this).classed("selecionado", false);
+          document.getElementById('graficos-container').style.display = 'none';
         } else {
+          estadosSelecionados.clear(); // Se quiser permitir só um estado de cada vez
           estadosSelecionados.set(estado, {});
-          d3.select(this).classed("selecionado", true);
+          d3.select(this).classed("estado-selecionado", true);
+          criarGraficos(estado); // Cria os gráficos
+          document.getElementById('graficos-container').style.display = 'flex';
         }
+      
         atualizarVisualizacao();
       });
+      
     
     console.log("Mapa carregado com sucesso!");
     
@@ -282,6 +296,183 @@ function preencherSelect(id, valores, valorAtual) {
   } else {
     select.value = '';
   }
+}
+
+// Função para criar os gráficos
+function criarGraficos(estadoSelecionado) {
+  const indicador = document.getElementById('indicador').value;
+  if (!indicador) return;
+
+  // Filtra os dados para o estado selecionado
+  const dadosEstado = dadosEducacao.filter(item => 
+    item['Abertura Territorial'] === estadoSelecionado &&
+    item['Indicador'] === indicador
+  );
+
+  // Gráfico 1: Gênero (Homem vs Mulher)
+  const dadosGenero = [
+    {genero: 'Homem', valor: parseFloat(dadosEstado.find(d => d['Variável de abertura'] === 'Sexo' && d['Categoria'] === 'Homem')?.['2018'] || 0)},
+    {genero: 'Mulher', valor: parseFloat(dadosEstado.find(d => d['Variável de abertura'] === 'Sexo' && d['Categoria'] === 'Mulher')?.['2018'] || 0)}
+  ];
+
+  // Gráfico 2: Raça (Branca vs Preta/Parda)
+  const dadosRaca = [
+    {raca: 'Branca', valor: parseFloat(dadosEstado.find(d => d['Variável de abertura'] === 'Cor ou raça' && d['Categoria'] === 'Branca')?.['2018'] || 0)},
+    {raca: 'Preta ou parda', valor: parseFloat(dadosEstado.find(d => d['Variável de abertura'] === 'Cor ou raça' && (d['Categoria'] === 'Preta ou parda'))?.['2018'] || 0)}
+  ];
+
+  // Limpa gráficos anteriores
+  d3.select('#grafico-genero').selectAll('*').remove();
+  d3.select('#grafico-raca').selectAll('*').remove();
+
+  // Cria os gráficos
+  criarGraficoGenero(dadosGenero, indicador);
+  criarGraficoRaca(dadosRaca, indicador);
+
+  // Mostra o container
+  document.getElementById('graficos-container').style.display = 'block';
+}
+
+function criarGraficoGenero(dados, indicador) {
+  const container = d3.select('#grafico-genero');
+  container.selectAll('*').remove();
+
+  const width = 300;
+  const height = 220;
+  const margin = {top: 40, right: 20, bottom: 50, left: 50};
+
+  const svg = container.append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', `translate(${margin.left},${margin.top})`);
+
+  // Escalas
+  const x = d3.scaleBand()
+    .domain(dados.map(d => d.genero))
+    .range([0, width])
+    .padding(0.4);
+
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(dados, d => d.valor)])
+    .nice()
+    .range([height, 0]);
+
+  // Eixo X
+  svg.append('g')
+    .attr('class', 'axis axis-x')
+    .attr('transform', `translate(0,${height})`)
+    .call(d3.axisBottom(x).tickSizeOuter(0));
+
+  // Eixo Y
+  svg.append('g')
+    .attr('class', 'axis axis-y')
+    .call(d3.axisLeft(y).tickSizeOuter(0));
+
+  // Barras
+  svg.selectAll('.bar')
+    .data(dados)
+    .enter().append('rect')
+    .attr('class', d => d.genero === 'Homem' ? 'bar-masculino' : 'bar-feminino')
+    .attr('x', d => x(d.genero))
+    .attr('y', d => y(d.valor))
+    .attr('width', x.bandwidth())
+    .attr('height', d => height - y(d.valor))
+    .attr('rx', 3) // Bordas arredondadas
+    .attr('ry', 3);
+
+  // Rótulo eixo Y
+  svg.append('text')
+    .attr('class', 'axis-label')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', -margin.left + 15)
+    .attr('x', -height / 2)
+    .text('Valor');
+
+  // Rótulo eixo X
+  svg.append('text')
+    .attr('class', 'axis-label')
+    .attr('x', width / 2)
+    .attr('y', height + margin.bottom - 10)
+    .text('Sexo');
+
+  // Título
+  svg.append('text')
+    .attr('class', 'chart-title')
+    .attr('x', width / 3)
+    .attr('y', -margin.top / 2)
+    .text('Distribuição por Gênero');
+}
+
+function criarGraficoRaca(dados, indicador) {
+  const container = d3.select('#grafico-raca');
+  container.selectAll('*').remove();
+
+  const width = 300;
+  const height = 220;
+  const margin = {top: 40, right: 20, bottom: 50, left: 50};
+
+  const svg = container.append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', `translate(${margin.left},${margin.top})`);
+
+  // Escalas
+  const x = d3.scaleBand()
+    .domain(dados.map(d => d.raca))
+    .range([0, width])
+    .padding(0.4);
+
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(dados, d => d.valor)])
+    .nice()
+    .range([height, 0]);
+
+  // Eixo X
+  svg.append('g')
+    .attr('class', 'axis axis-x')
+    .attr('transform', `translate(0,${height})`)
+    .call(d3.axisBottom(x).tickSizeOuter(0));
+
+  // Eixo Y
+  svg.append('g')
+    .attr('class', 'axis axis-y')
+    .call(d3.axisLeft(y).tickSizeOuter(0));
+
+  // Barras
+  svg.selectAll('.bar')
+    .data(dados)
+    .enter().append('rect')
+    .attr('class', d => d.raca === 'Branca' ? 'bar-branca' : 'bar-preta-parda')
+    .attr('x', d => x(d.raca))
+    .attr('y', d => y(d.valor))
+    .attr('width', x.bandwidth())
+    .attr('height', d => height - y(d.valor))
+    .attr('rx', 3)
+    .attr('ry', 3);
+
+  // Rótulo eixo Y
+  svg.append('text')
+    .attr('class', 'axis-label')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', -margin.left + 15)
+    .attr('x', -height / 2)
+    .text('Valor');
+
+  // Rótulo eixo X
+  svg.append('text')
+    .attr('class', 'axis-label')
+    .attr('x', width / 2)
+    .attr('y', height + margin.bottom - 10)
+    .text('Cor ou Raça');
+
+  // Título
+  svg.append('text')
+    .attr('class', 'chart-title')
+    .attr('x', width / 3)
+    .attr('y', -margin.top / 2)
+    .text('Distribuição por Raça');
 }
 
 // Atualiza a visualização do mapa com base nos filtros

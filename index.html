@@ -61,12 +61,21 @@
       </div>
 
       <div class="instructions">
-        <p>Selecione os filtros para visualizar os dados no mapa.</p>
-        <p>Clique nos estados para selecionar/deselecionar.</p>
+        <p>Selecione os filtros desejados acima para visualizar os dados no mapa.</p>
+        <p>Clique nos estados para visulizar os dados por sexo e raça do indicador
+          selecionado no estado que clicar.</p>
       </div>
 
-      <div id="mapa-container">
-        <svg id="mapa" width="900" height="600"></svg>
+      <div class="visualizacao-container">
+        <div class="mapa-wrapper">
+          <svg id="mapa" width="900" height="600"></svg>
+        </div>
+        
+        <div id="grafico-container">
+          <div id="grafico-genero" class="grafico"></div>
+          <div id="grafico-raca" class="grafico"></div>
+        </div>
+        
       </div>
       
       <div class="legenda">
